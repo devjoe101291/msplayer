@@ -1,0 +1,1 @@
+﻿docker unavailable or error listing containers

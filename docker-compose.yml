@@ -1,0 +1,18 @@
+version: "3.8"
+services:
+  newpipe:
+    image: openjdk:17-jdk-slim
+    container_name: newpipe-extractor
+    working_dir: /opt/newpipe
+    volumes:
+      - ./newpipe:/opt/newpipe
+    ports:
+      - "7071:7071"
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      if [ ! -f /opt/newpipe/newpipe-extractor-server.jar ]; then
+        echo "Place newpipe-extractor-server.jar into ./newpipe and restart the container.";
+        sleep infinity;
+      else
+        java -jar /opt/newpipe/newpipe-extractor-server.jar --server.port=7071;
+      fi

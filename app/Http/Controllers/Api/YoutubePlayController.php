@@ -17,12 +17,37 @@ class YoutubePlayController extends Controller
         $validated = $request->validate([
             'url' => ['required', 'url', 'max:500'],
             'stream_mode' => ['nullable', 'string', 'in:audio,video,best'],
+            'title' => ['nullable', 'string', 'max:255'],
+            'artist' => ['nullable', 'string', 'max:255'],
+            'thumbnail_url' => ['nullable', 'url', 'max:1000'],
+            'duration_seconds' => ['nullable', 'integer', 'min:0'],
         ]);
+
+        $videoId = $this->extractVideoId($validated['url']);
+        $details = null;
 
         try {
             $details = $client->details($validated['url']);
         } catch (RuntimeException $e) {
-            return response()->json(['message' => $e->getMessage()], 503);
+            // NewPipe stream extraction failed (e.g. YouTube bot check on datacenter IP).
+            // Fallback gracefully so the client can play the video via YouTube player without error.
+            return response()->json([
+                'data' => [
+                    'title' => $validated['title'] ?? 'YouTube Track',
+                    'artist' => $validated['artist'] ?? 'YouTube',
+                    'stream_url' => null,
+                    'stream_type' => 'youtube',
+                    'youtube_id' => $videoId,
+                    'audio_stream_url' => null,
+                    'video_stream_url' => null,
+                    'audio_mime_type' => null,
+                    'video_mime_type' => null,
+                    'thumbnail_url' => $validated['thumbnail_url'] ?? ($videoId ? "https://i.ytimg.com/vi/{$videoId}/hqdefault.jpg" : null),
+                    'duration_seconds' => $validated['duration_seconds'] ?? null,
+                    'source_url' => $validated['url'],
+                    'is_fallback' => true,
+                ]
+            ]);
         }
 
         $streamMode = $validated['stream_mode'] ?? 'best';
@@ -100,8 +125,17 @@ class YoutubePlayController extends Controller
                 'thumbnail_url' => $details['thumbnail_url'] ?? null,
                 'duration_seconds' => $details['duration_seconds'] ?? null,
                 'source_url' => $details['url'] ?? $validated['url'],
+                'youtube_id' => $videoId,
             ]
         ]);
+    }
+
+    private function extractVideoId(string $url): ?string
+    {
+        if (preg_match('/(?:v=|\/embed\/|\/watch\?v=|youtu\.be\/|\/v\/)([^&#?]+)/', $url, $matches)) {
+            return $matches[1];
+        }
+        return null;
     }
 }
 

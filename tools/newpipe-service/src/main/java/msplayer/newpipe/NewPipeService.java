@@ -91,7 +91,10 @@ public class NewPipeService {
         }
 
         StreamInfo info = StreamInfo.getInfo(url);
-        PlayableStream stream = firstPlayableStream(info);
+        PlayableStream audioStream = firstAudioStream(info);
+        PlayableStream videoStream = firstVideoStream(info);
+
+        PlayableStream defaultStream = !audioStream.url.isEmpty() ? audioStream : videoStream;
 
         return "{"
                 + "\"id\":\"" + escape(videoIdFromUrl(url)) + "\","
@@ -100,25 +103,45 @@ public class NewPipeService {
                 + "\"url\":\"" + escape(url) + "\","
                 + "\"thumbnail_url\":\"" + escape(firstImageUrl(info.getThumbnails())) + "\","
                 + "\"duration_seconds\":" + Math.max(0, info.getDuration()) + ","
-                + "\"stream_url\":\"" + escape(stream.url) + "\","
-                + "\"stream_type\":\"" + escape(stream.type) + "\","
-                + "\"mime_type\":\"" + escape(stream.mimeType) + "\""
+                + "\"stream_url\":\"" + escape(defaultStream.url) + "\","
+                + "\"stream_type\":\"" + escape(defaultStream.type) + "\","
+                + "\"mime_type\":\"" + escape(defaultStream.mimeType) + "\","
+                + "\"audio_stream_url\":\"" + escape(audioStream.url) + "\","
+                + "\"audio_mime_type\":\"" + escape(audioStream.mimeType) + "\","
+                + "\"video_stream_url\":\"" + escape(videoStream.url) + "\","
+                + "\"video_mime_type\":\"" + escape(videoStream.mimeType) + "\""
                 + "}";
     }
 
-    private static PlayableStream firstPlayableStream(StreamInfo info) {
+    private static PlayableStream firstAudioStream(StreamInfo info) {
         for (AudioStream stream : info.getAudioStreams()) {
             if (stream.isUrl()) {
-                return new PlayableStream(stream.getContent(), "audio", "audio/mp4");
+                String mime = stream.getFormat() != null && stream.getFormat().getName().toLowerCase().contains("webm")
+                        ? "audio/webm"
+                        : "audio/mp4";
+                return new PlayableStream(stream.getContent(), "audio", mime);
             }
         }
+        return new PlayableStream("", "audio", "audio/mp4");
+    }
 
+    private static PlayableStream firstVideoStream(StreamInfo info) {
         for (VideoStream stream : info.getVideoStreams()) {
             if (stream.isUrl()) {
-                return new PlayableStream(stream.getContent(), "video", "video/mp4");
+                String mime = stream.getFormat() != null && stream.getFormat().getName().toLowerCase().contains("webm")
+                        ? "video/webm"
+                        : "video/mp4";
+                return new PlayableStream(stream.getContent(), "video", mime);
             }
         }
-
+        for (VideoStream stream : info.getVideoOnlyStreams()) {
+            if (stream.isUrl()) {
+                String mime = stream.getFormat() != null && stream.getFormat().getName().toLowerCase().contains("webm")
+                        ? "video/webm"
+                        : "video/mp4";
+                return new PlayableStream(stream.getContent(), "video", mime);
+            }
+        }
         return new PlayableStream("", "video", "video/mp4");
     }
 

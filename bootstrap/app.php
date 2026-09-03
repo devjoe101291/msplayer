@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(function (Request $request): ?string {
+        $middleware->trustProxies(at: '*')->redirectGuestsTo(function (Request $request): ?string {
             return $request->is('api/*') ? null : '/';
         });
     })

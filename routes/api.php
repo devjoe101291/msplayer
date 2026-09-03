@@ -24,17 +24,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/library/media/{mediaItem}/play', [LibraryController::class, 'recordPlay']);
 
     Route::post('/youtube/play', [YoutubePlayController::class, 'play']);
-
+    Route::get('/youtube/search', [YoutubeImportController::class, 'search']);
+    Route::post('/youtube/import', [YoutubeImportController::class, 'import']);
 
     Route::get('/playlists', [PlaylistController::class, 'index']);
     Route::post('/playlists', [PlaylistController::class, 'store']);
+    Route::delete('/playlists/{playlist}', [PlaylistController::class, 'destroy']);
     Route::post('/playlists/{playlist}/items', [PlaylistController::class, 'addItem']);
     Route::delete('/playlists/{playlist}/items/{mediaItem}', [PlaylistController::class, 'removeItem']);
 
 });
-
-Route::get('/youtube/search', [YoutubeImportController::class, 'search']);
-Route::post('/youtube/import', [YoutubeImportController::class, 'import']);
 
 
 Route::get('/media', [MediaItemController::class, 'index']);

@@ -42,13 +42,44 @@ class PlaylistController extends Controller
     {
         abort_unless($playlist->user_id === $request->user()->id, 403);
 
-        $validated = $request->validate([
-            'media_item_id' => ['required', 'exists:media_items,id'],
-        ]);
+        $mediaItemId = $request->input('media_item_id');
+
+        if (!$mediaItemId && ($request->filled('source_url') || $request->filled('url'))) {
+            $sourceUrl = $request->input('source_url') ?: $request->input('url');
+            $sourceId = $request->input('source_id');
+            if (!$sourceId && preg_match('/(?:v=|\/embed\/|\/watch\?v=|youtu\.be\/|\/v\/)([^&#?]+)/', $sourceUrl, $matches)) {
+                $sourceId = $matches[1];
+            }
+            $sourceId = $sourceId ?: md5($sourceUrl);
+
+            $mediaItem = MediaItem::firstOrCreate(
+                ['source' => 'youtube', 'source_id' => $sourceId],
+                [
+                    'title' => $request->input('title') ?: 'YouTube Track',
+                    'artist' => $request->input('artist') ?: 'YouTube',
+                    'album' => 'Online Tracks',
+                    'genre' => 'Online',
+                    'type' => $request->input('type', 'audio'),
+                    'media_path' => 'youtube:' . $sourceId,
+                    'external_cover_url' => $request->input('thumbnail_url') ?: $request->input('cover_url'),
+                    'source_url' => $sourceUrl,
+                    'duration_seconds' => $request->input('duration_seconds'),
+                    'processing_status' => 'ready',
+                ]
+            );
+            $mediaItemId = $mediaItem->id;
+        }
+
+        if (!$mediaItemId) {
+            $validated = $request->validate([
+                'media_item_id' => ['required', 'exists:media_items,id'],
+            ]);
+            $mediaItemId = $validated['media_item_id'];
+        }
 
         $position = $playlist->items()->max('position') ?? 0;
         $playlist->items()->firstOrCreate(
-            ['media_item_id' => $validated['media_item_id']],
+            ['media_item_id' => $mediaItemId],
             ['position' => $position + 1]
         );
 
@@ -62,5 +93,15 @@ class PlaylistController extends Controller
         $playlist->items()->where('media_item_id', $mediaItem->id)->delete();
 
         return response()->json(['data' => $playlist->fresh('items.mediaItem')]);
+    }
+
+    public function destroy(Request $request, Playlist $playlist): JsonResponse
+    {
+        abort_unless($playlist->user_id === $request->user()->id, 403);
+
+        $playlist->items()->delete();
+        $playlist->delete();
+
+        return response()->json(['message' => 'Playlist deleted successfully.']);
     }
 }

@@ -44,19 +44,37 @@ class MediaItem extends Model
 
     protected $appends = [
         'stream_url',
+        'youtube_id',
         'cover_url',
         'thumbnail_url',
         'formatted_size',
         'duration_label',
     ];
 
-    public function getStreamUrlAttribute(): string
+    public function getStreamUrlAttribute(): ?string
     {
         if ($this->external_stream_url) {
             return $this->external_stream_url;
         }
 
+        if ($this->source === 'youtube' || str_starts_with((string) $this->media_path, 'youtube:')) {
+            return null;
+        }
+
         return route('media.stream', $this);
+    }
+
+    public function getYoutubeIdAttribute(): ?string
+    {
+        if ($this->source === 'youtube' && !empty($this->source_id) && strlen($this->source_id) <= 15) {
+            return $this->source_id;
+        }
+
+        if ($this->source_url && preg_match('/(?:v=|\/embed\/|\/watch\?v=|youtu\.be\/|\/v\/)([^&#?]+)/', $this->source_url, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
     }
 
     public function getCoverUrlAttribute(): ?string

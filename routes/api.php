@@ -23,8 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/library/media/{mediaItem}/like', [LibraryController::class, 'toggleLike']);
     Route::post('/library/media/{mediaItem}/play', [LibraryController::class, 'recordPlay']);
 
-    Route::post('/youtube/play', [YoutubePlayController::class, 'play']);
-    Route::get('/youtube/search', [YoutubeImportController::class, 'search']);
     Route::post('/youtube/import', [YoutubeImportController::class, 'import']);
 
     Route::get('/playlists', [PlaylistController::class, 'index']);
@@ -34,6 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/playlists/{playlist}/items/{mediaItem}', [PlaylistController::class, 'removeItem']);
 
 });
+
+Route::post('/youtube/play', [YoutubePlayController::class, 'play']);
+Route::get('/youtube/search', [YoutubeImportController::class, 'search']);
 
 
 Route::get('/media', [MediaItemController::class, 'index']);

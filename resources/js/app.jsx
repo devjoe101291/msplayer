@@ -458,9 +458,21 @@ function App() {
         }
     }
 
+    function handleTrackPlay(item) {
+        if (!item) return;
+        const ytId = item.youtube_id || (item.source === 'youtube' ? extractYoutubeId(item.source_url || item.url || item.media_path) : null);
+        
+        // If it's a YouTube track or has no direct stream, route to playYoutubeItem
+        if (ytId || item.source === 'youtube' || (item.media_path && String(item.media_path).startsWith('youtube:')) || !item.stream_url) {
+            playYoutubeItem(item);
+        } else {
+            playItem(item);
+        }
+    }
+
     function togglePlay() {
         if (!current && items.length > 0) {
-            playItem(items[0]);
+            handleTrackPlay(items[0]);
             return;
         }
         setIsPlaying((val) => !val);
@@ -527,11 +539,7 @@ function App() {
         if (direction === 1 && queue.length > 0) {
             const nextTrack = queue[0];
             setQueue((prev) => prev.slice(1));
-            if (nextTrack.url && !nextTrack.stream_url) {
-                playYoutubeItem(nextTrack);
-            } else {
-                playItem(nextTrack);
-            }
+            handleTrackPlay(nextTrack);
             return;
         }
 
@@ -545,11 +553,7 @@ function App() {
         ) {
             const nextTrack = autoQueue[0];
             setAutoQueue((prev) => prev.slice(1));
-            if (nextTrack.url && !nextTrack.stream_url) {
-                playYoutubeItem(nextTrack);
-            } else {
-                playItem(nextTrack);
-            }
+            handleTrackPlay(nextTrack);
             return;
         }
 
@@ -560,13 +564,13 @@ function App() {
 
         if (isShuffle) {
             const randomIndex = Math.floor(Math.random() * playable.length);
-            playItem(playable[randomIndex]);
+            handleTrackPlay(playable[randomIndex]);
             return;
         }
 
         const index = playable.findIndex((i) => i.id === current.id);
         const nextIndex = (index + direction + playable.length) % playable.length;
-        playItem(playable[nextIndex]);
+        handleTrackPlay(playable[nextIndex]);
     }
 
     function cycleRepeat() {
@@ -866,41 +870,47 @@ function App() {
     }
 
     async function playYoutubeItem(result) {
-        const fallbackId = extractYoutubeId(result.url || result.source_url);
+        const fallbackId = result.youtube_id || extractYoutubeId(result.url || result.source_url || result.media_path);
         try {
             setNotice(`Loading "${result.title}"...`);
-            const res = await apiFetch('/api/youtube/play', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    url: result.url || result.source_url,
-                    stream_mode: 'audio',
-                    title: result.title,
-                    artist: result.uploader || result.artist,
-                    thumbnail_url: result.thumbnail_url || result.cover_url,
-                    duration_seconds: result.duration_seconds,
-                }),
-            });
+            const targetUrl = result.source_url || result.url || (fallbackId ? `https://www.youtube.com/watch?v=${fallbackId}` : null);
+            let stream = {};
+            if (targetUrl) {
+                const res = await apiFetch('/api/youtube/play', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        url: targetUrl,
+                        stream_mode: result.type === 'video' ? 'video' : 'audio',
+                        title: result.title,
+                        artist: result.uploader || result.artist,
+                        thumbnail_url: result.thumbnail_url || result.cover_url,
+                        duration_seconds: result.duration_seconds,
+                    }),
+                });
+                if (res.ok) {
+                    const payload = await res.json().catch(() => ({}));
+                    stream = payload.data ?? {};
+                }
+            }
 
-            const payload = res.ok ? await res.json().catch(() => ({})) : {};
-            const stream = payload.data ?? {};
             const videoId = stream.youtube_id || fallbackId;
 
             const next = {
-                id: result.id ?? result.url,
-                type: stream.stream_type ?? 'audio',
+                id: result.id ?? result.url ?? videoId,
+                type: result.type === 'video' ? 'video' : (stream.stream_type ?? 'audio'),
                 title: stream.title ?? result.title,
                 artist: stream.artist ?? (result.uploader ?? result.artist ?? 'Unknown Artist'),
-                source_url: stream.source_url ?? result.url,
-                stream_url: stream.stream_url,
+                source_url: stream.source_url ?? targetUrl,
+                stream_url: stream.stream_url || null,
                 youtube_id: videoId,
-                audio_stream_url: stream.audio_stream_url,
-                video_stream_url: stream.video_stream_url,
+                audio_stream_url: stream.audio_stream_url || null,
+                video_stream_url: stream.video_stream_url || null,
                 audio_mime_type: stream.audio_mime_type,
                 video_mime_type: stream.video_mime_type,
-                thumbnail_url: stream.thumbnail_url ?? result.thumbnail_url,
-                cover_url: stream.thumbnail_url ?? result.thumbnail_url,
-                description: stream.description,
+                thumbnail_url: stream.thumbnail_url ?? result.thumbnail_url ?? (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null),
+                cover_url: stream.thumbnail_url ?? result.cover_url ?? result.thumbnail_url ?? (videoId ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg` : null),
+                description: stream.description ?? result.description,
                 duration_seconds: stream.duration_seconds || result.duration_seconds,
             };
 
@@ -911,7 +921,9 @@ function App() {
                 playItem({
                     ...result,
                     youtube_id: fallbackId,
-                    type: 'audio',
+                    type: result.type === 'video' ? 'video' : 'audio',
+                    stream_url: null,
+                    audio_stream_url: null,
                 });
                 setNotice('');
             } else {
@@ -1080,7 +1092,7 @@ function App() {
     async function openVideo(item) {
         setSelectedVideo(item);
         setActiveView('video');
-        playItem(item);
+        handleTrackPlay({ ...item, type: 'video' });
 
         try {
             const response = await fetch(`/api/videos/${item.id}/theater`);
@@ -1123,11 +1135,30 @@ function App() {
         return 'Good evening';
     }, []);
 
+    function handleMediaError(e) {
+        console.warn('HTML5 media stream error:', e);
+        if (currentYtId) {
+            setNotice('Audio stream unavailable, switching to YouTube playback...');
+            setCurrent((prev) => ({
+                ...(prev ?? {}),
+                stream_url: null,
+                audio_stream_url: null,
+                video_stream_url: null,
+                youtube_id: currentYtId,
+            }));
+            setIsPlaying(true);
+        } else {
+            setNotice('Could not play media stream.');
+            setIsPlaying(false);
+        }
+    }
+
     return (
         <div className="app-shell">
             {/* Audio Media Element: Permanently mounted, never unmounts across view switches */}
             <audio
-                key={!isPlayingViaYt && (current?.audio_stream_url || current?.stream_url) ? `vt-audio-${current?.id}` : 'vt-audio-idle'}
+                id="ventune-main-audio"
+                onError={handleMediaError}
                 preload="auto"
                 ref={mediaRef}
                 src={!isPlayingViaYt ? (current?.audio_stream_url || current?.stream_url || '') : ''}
@@ -1136,18 +1167,23 @@ function App() {
             {/* YouTube Player Container for Continuous Background & Direct Playback */}
             <div
                 id="ventune-yt-player-container"
-                style={{
-                    position: 'fixed',
-                    left: -9999,
-                    top: 0,
-                    width: 300,
-                    height: 200,
-                    opacity: 0,
-                    pointerEvents: 'none',
-                    zIndex: -999,
-                }}
+                className={`ventune-yt-dock ${isPlayingViaYt ? 'active' : ''} ${current?.type === 'video' ? 'is-video' : 'is-audio'} ${activeView === 'video' ? 'in-theater' : 'in-pip'}`}
             >
                 <div id="ventune-yt-player" />
+                {isPlayingViaYt && current?.type === 'video' && activeView !== 'video' && (
+                    <button
+                        className="pip-expand-btn"
+                        onClick={() => {
+                            setSelectedVideo(current);
+                            setActiveView('video');
+                        }}
+                        title="Expand to Theater Mode"
+                        type="button"
+                    >
+                        <Film size={13} />
+                        <span>Theater Mode</span>
+                    </button>
+                )}
             </div>
 
             {/* Ventune Sidebar */}
@@ -1160,7 +1196,7 @@ function App() {
                         </div>
                         <div>
                             <strong>Ventune</strong>
-                            <span>Music Streaming</span>
+                            <span>Spatial Music & Video</span>
                         </div>
                     </div>
 
@@ -1451,7 +1487,7 @@ function App() {
                             likedIds={likedIds}
                             onLike={toggleLike}
                             onOpenVideo={openVideo}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             onSelectPlaylist={(id) => {
                                 setSelectedPlaylistId(id);
                                 setActiveView('playlist-detail');
@@ -1472,7 +1508,7 @@ function App() {
                             onAddToQueue={addToQueue}
                             onImportYoutube={importYoutube}
                             onLike={toggleLike}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             onPlayYoutube={playYoutubeItem}
                             onSearchYoutube={searchYoutube}
                             playlists={playlists}
@@ -1494,7 +1530,7 @@ function App() {
                             onAddToPlaylist={(item) => setAddToPlaylistTrack(item)}
                             onAddToQueue={addToQueue}
                             onLike={toggleLike}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             onTogglePlay={togglePlay}
                             playlists={playlists}
                             title="Liked Songs"
@@ -1513,7 +1549,7 @@ function App() {
                             onAddToQueue={addToQueue}
                             onDeletePlaylist={deletePlaylist}
                             onLike={toggleLike}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             onRemoveFromPlaylist={removeFromPlaylist}
                             onTogglePlay={togglePlay}
                             playlist={currentPlaylist}
@@ -1533,7 +1569,7 @@ function App() {
                             onAddToPlaylist={(item) => setAddToPlaylistTrack(item)}
                             onAddToQueue={addToQueue}
                             onLike={toggleLike}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             playlists={playlists}
                         />
                     )}
@@ -1542,7 +1578,7 @@ function App() {
                         <ArtistsView
                             artists={artists}
                             items={items}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             selectedArtist={selectedArtist}
                         />
                     )}
@@ -1551,7 +1587,7 @@ function App() {
                         <AlbumsView
                             albums={albums}
                             items={items}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             selectedAlbum={selectedAlbum}
                         />
                     )}
@@ -1565,7 +1601,7 @@ function App() {
                             onAddToPlaylist={(item) => setAddToPlaylistTrack(item)}
                             onAddToQueue={addToQueue}
                             onLike={toggleLike}
-                            onPlay={playItem}
+                            onPlay={handleTrackPlay}
                             playlists={playlists}
                         />
                     )}
@@ -1912,13 +1948,7 @@ function App() {
                 onAddToQueue={addToQueue}
                 onClearQueue={clearQueue}
                 onClose={() => setIsQueueDrawerOpen(false)}
-                onPlay={(item) => {
-                    if (item.url && !item.stream_url) {
-                        playYoutubeItem(item);
-                    } else {
-                        playItem(item);
-                    }
-                }}
+                onPlay={handleTrackPlay}
                 onRemoveFromQueue={removeFromQueue}
                 onToggleAutoplay={toggleAutoplay}
                 queue={queue}
@@ -2921,46 +2951,74 @@ function VideoTheaterView({ current, isPlaying, mediaRef, onPlay, onSwitchAudioV
 
                 {/* Media Surface: Video Player OR Album Art Song Card */}
                 {isVideoMode ? (
-                    videoSrc ? (
-                        <video
-                            autoPlay
-                            className="theater-video-player"
-                            controls
-                            key={`${current.id}-theater-video-${videoSrc}`}
-                            poster={current.thumbnail_url ?? current.cover_url ?? ''}
-                            ref={mediaRef}
-                            src={videoSrc}
-                        />
-                    ) : (current.youtube_id || extractYoutubeId(current.source_url || current.url)) ? (
-                        <iframe
-                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
-                            className="theater-video-player"
-                            src={`https://www.youtube-nocookie.com/embed/${current.youtube_id || extractYoutubeId(current.source_url || current.url)}?autoplay=1&enablejsapi=1&rel=0`}
-                            style={{ width: '100%', height: '480px', borderRadius: 12, border: 'none' }}
-                            title={current.title}
-                        />
-                    ) : (
-                        <div className="flex flex-col items-center justify-center p-12 text-[#A8A3C8]">
-                            <p>No video stream available for this track.</p>
-                        </div>
-                    )
+                    (() => {
+                        const ytVideoId = current.youtube_id || extractYoutubeId(current.source_url || current.url || current.media_path);
+                        const hasDirectFile = videoSrc && !videoSrc.includes('duckdns.org/api/media') && !videoSrc.includes('googlevideo.com');
+
+                        if (hasDirectFile) {
+                            return (
+                                <div className="theater-cinema-screen">
+                                    <div
+                                        className="theater-ambient-glow"
+                                        style={{ backgroundImage: `url(${current.thumbnail_url || current.cover_url || ''})` }}
+                                    />
+                                    <video
+                                        autoPlay
+                                        className="theater-video-player"
+                                        controls
+                                        key={`${current.id}-theater-video-${videoSrc}`}
+                                        poster={current.thumbnail_url ?? current.cover_url ?? ''}
+                                        src={videoSrc}
+                                    />
+                                </div>
+                            );
+                        }
+
+                        if (ytVideoId) {
+                            return (
+                                <div className="theater-cinema-screen">
+                                    <div
+                                        className="theater-ambient-glow"
+                                        style={{ backgroundImage: `url(${current.thumbnail_url || current.cover_url || `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`})` }}
+                                    />
+                                    <iframe
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                        allowFullScreen
+                                        className="theater-video-player"
+                                        src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=1&enablejsapi=1&rel=0&playsinline=1`}
+                                        style={{ width: '100%', height: '520px', borderRadius: 16, border: 'none' }}
+                                        title={current.title}
+                                    />
+                                </div>
+                            );
+                        }
+
+                        return (
+                            <div className="flex flex-col items-center justify-center p-12 text-[#A8A3C8]">
+                                <p>No video stream available for this track.</p>
+                            </div>
+                        );
+                    })()
                 ) : (
                     <div className="theater-song-card">
+                        <div
+                            className="theater-ambient-glow"
+                            style={{ backgroundImage: `url(${current.cover_url || current.thumbnail_url || current.external_cover_url || ''})` }}
+                        />
                         <img
                             alt={current.title}
                             className="theater-song-art"
                             src={current.cover_url || current.thumbnail_url || current.external_cover_url}
                         />
-                        <div style={{ fontSize: 20, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+                        <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 4, zIndex: 2 }}>
                             {current.title}
                         </div>
-                        <div style={{ fontSize: 14, color: '#A8A3C8', marginBottom: 14 }}>
+                        <div style={{ fontSize: 14, color: '#A8A3C8', marginBottom: 14, zIndex: 2 }}>
                             {current.artist}
                         </div>
-                        <div className="badge-tag standard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <div className="badge-tag standard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, zIndex: 2 }}>
                             <Headphones size={13} />
-                            <span>Pure Audio Playback</span>
+                            <span>Spatial Audio Playback</span>
                             <div className="vt-equalizer" style={{ marginLeft: 4 }}>
                                 <span></span>
                                 <span></span>

@@ -12,39 +12,39 @@
    ========================================================================== */
 
 :root {
-    --sp-black: #08080C;
-    --sp-base: #0F0E18;
-    --sp-surface: #151324;
-    --sp-elevated: #1D1A32;
-    --sp-highlight: #282444;
-    --sp-card-hover: #2F2A52;
-    --sp-divider: rgba(255, 255, 255, 0.08);
+    --sp-black: #060609;
+    --sp-base: rgba(18, 18, 26, 0.72);
+    --sp-surface: rgba(26, 26, 38, 0.65);
+    --sp-elevated: rgba(36, 36, 52, 0.75);
+    --sp-highlight: rgba(48, 48, 68, 0.85);
+    --sp-card-hover: rgba(40, 40, 58, 0.9);
+    --sp-divider: rgba(255, 255, 255, 0.09);
     
-    --sp-green: #8B5CF6;
-    --sp-green-hover: #A78BFA;
-    --sp-green-active: #7C3AED;
+    --sp-green: #FA2D55;
+    --sp-green-hover: #FF4D75;
+    --sp-green-active: #E02247;
     
     --sp-text-bright: #FFFFFF;
-    --sp-text-subdued: #B4B0D5;
-    --sp-text-muted: #736E98;
+    --sp-text-subdued: #9898A6;
+    --sp-text-muted: #63636E;
     
-    --sp-red: #F87171;
-    --sp-purple: #C084FC;
-    --sp-blue: #60A5FA;
-    --sp-orange: #FB923C;
+    --sp-red: #FA2D55;
+    --sp-purple: #A855F7;
+    --sp-blue: #00F5FF;
+    --sp-orange: #FF9500;
     
-    --sp-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
-    --sp-radius-card: 10px;
+    --sp-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    --sp-radius-card: 18px;
     --sp-radius-pill: 9999px;
     --sp-radius-btn: 500px;
     
-    --vt-accent: #8B5CF6;
-    --vt-accent-hover: #A78BFA;
-    --vt-accent-glow: rgba(139, 92, 246, 0.45);
-    --vt-teal: #06B6D4;
-    --vt-teal-glow: rgba(6, 182, 212, 0.35);
+    --vt-accent: #FA2D55;
+    --vt-accent-hover: #FF4D75;
+    --vt-accent-glow: rgba(250, 45, 85, 0.45);
+    --vt-teal: #00F5FF;
+    --vt-teal-glow: rgba(0, 245, 255, 0.35);
     
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color-scheme: dark;
 }
 
@@ -56,6 +56,11 @@ html, body {
     margin: 0;
     padding: 0;
     background-color: var(--sp-black);
+    background-image: 
+        radial-gradient(circle at 12% 15%, rgba(250, 45, 85, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 88% 85%, rgba(168, 85, 247, 0.09) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(0, 245, 255, 0.03) 0%, transparent 60%);
+    background-attachment: fixed;
     color: var(--sp-text-bright);
     font-family: inherit;
     overflow: hidden;
@@ -81,20 +86,20 @@ a {
     text-decoration: none;
 }
 
-/* Custom Slim Ventune Scrollbars */
+/* Custom Slim Ventune Apple-Style Scrollbars */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
 }
 ::-webkit-scrollbar-track {
     background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.35);
 }
 
 /* ==========================================================================
@@ -104,10 +109,10 @@ a {
 .app-shell {
     display: grid;
     grid-template-columns: 280px minmax(0, 1fr);
-    height: calc(100vh - 84px);
-    gap: 8px;
-    padding: 8px 8px 0 8px;
-    background-color: var(--sp-black);
+    height: calc(100vh - 100px);
+    gap: 12px;
+    padding: 12px 12px 0 12px;
+    background: transparent;
     position: relative;
 }
 
@@ -784,33 +789,39 @@ a {
 
 .shelf-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: 20px;
 }
 
 .vt-card {
-    background: var(--sp-surface);
-    border-radius: var(--sp-radius-card);
-    padding: 16px;
+    background: rgba(20, 20, 30, 0.65);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 14px;
     display: flex;
     flex-direction: column;
     gap: 12px;
     position: relative;
     cursor: pointer;
-    transition: background 0.25s ease;
+    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .vt-card:hover {
-    background: var(--sp-highlight);
+    background: rgba(32, 32, 48, 0.85);
+    border-color: rgba(255, 255, 255, 0.22);
+    transform: translateY(-6px) scale(1.015);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.85), 0 0 28px rgba(250, 45, 85, 0.2);
 }
 
 .vt-card-cover-wrap {
     position: relative;
     width: 100%;
     aspect-ratio: 1;
-    border-radius: 6px;
+    border-radius: 14px;
     overflow: hidden;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
     background: var(--sp-elevated);
 }
 
@@ -818,6 +829,11 @@ a {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vt-card:hover .vt-card-cover {
+    transform: scale(1.04);
 }
 
 .vt-card-cover.artist-round {
@@ -826,29 +842,31 @@ a {
 
 .vt-card-play {
     position: absolute;
-    bottom: 8px;
-    right: 8px;
-    width: 48px;
-    height: 48px;
+    bottom: 10px;
+    right: 10px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: var(--sp-green);
-    color: var(--sp-black);
+    background: #FFFFFF;
+    color: #000000;
     display: grid;
     place-items: center;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(8px) scale(0.9);
     transition: opacity 0.2s ease, transform 0.2s ease, background 0.15s ease;
 }
 
 .vt-card:hover .vt-card-play {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(0) scale(1);
 }
 
 .vt-card-play:hover {
-    background: var(--sp-green-hover);
-    transform: scale(1.06);
+    background: var(--sp-green);
+    color: #FFFFFF;
+    transform: scale(1.1);
+    box-shadow: 0 8px 24px var(--vt-accent-glow);
 }
 
 .vt-card-title {
@@ -1133,17 +1151,23 @@ a {
 
 .vt-player {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 84px;
-    background: #000000;
-    border-top: 1px solid #282828;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 1380px;
+    height: 82px;
+    background: rgba(14, 14, 22, 0.84);
+    backdrop-filter: blur(45px) saturate(200%);
+    -webkit-backdrop-filter: blur(45px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.13);
+    border-radius: 22px;
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.06);
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0 16px;
-    z-index: 50;
+    padding: 0 20px;
+    z-index: 1000;
 }
 
 /* Player Left: Track Info */
@@ -1156,12 +1180,14 @@ a {
 }
 
 .player-thumb {
-    width: 56px;
-    height: 56px;
-    border-radius: 4px;
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
     object-fit: cover;
     background: var(--sp-elevated);
     flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .player-track-info {
@@ -1173,11 +1199,12 @@ a {
 
 .player-title {
     font-size: 14px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--sp-text-bright);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    letter-spacing: -0.01em;
 }
 
 .player-title:hover {
@@ -1203,15 +1230,18 @@ a {
     color: var(--sp-text-subdued);
     transition: color 0.2s, transform 0.1s;
     margin-left: 6px;
+    display: grid;
+    place-items: center;
 }
 
 .player-heart-btn:hover {
     color: var(--sp-text-bright);
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .player-heart-btn.active {
     color: var(--sp-green);
+    filter: drop-shadow(0 0 8px var(--vt-accent-glow));
 }
 
 /* Player Center: Controls & Scrubber */
@@ -1227,7 +1257,7 @@ a {
 .player-controls-row {
     display: flex;
     align-items: center;
-    gap: 18px;
+    gap: 20px;
 }
 
 .player-ctrl-btn {
@@ -1237,32 +1267,35 @@ a {
 
 .player-ctrl-btn:hover:not(:disabled) {
     color: var(--sp-text-bright);
-    transform: scale(1.08);
+    transform: scale(1.1);
 }
 
 .player-ctrl-btn.active {
     color: var(--sp-green);
+    filter: drop-shadow(0 0 6px var(--vt-accent-glow));
 }
 
 .player-ctrl-btn:disabled {
-    opacity: 0.35;
+    opacity: 0.3;
     cursor: not-allowed;
 }
 
 .play-pause-main {
-    width: 36px;
-    height: 36px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
-    background: var(--sp-text-bright);
-    color: var(--sp-black);
+    background: #FFFFFF;
+    color: #000000;
     display: grid;
     place-items: center;
-    transition: transform 0.1s, background 0.15s;
+    box-shadow: 0 4px 18px rgba(255, 255, 255, 0.35);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.15s;
 }
 
 .play-pause-main:hover:not(:disabled) {
     transform: scale(1.08);
-    background: #ffffff;
+    background: #FFFFFF;
+    box-shadow: 0 6px 22px rgba(250, 45, 85, 0.45);
 }
 
 .play-pause-main:disabled {
@@ -1273,12 +1306,14 @@ a {
 .scrubber-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
 }
 
 .scrubber-time {
     font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
     color: var(--sp-text-subdued);
     min-width: 36px;
     text-align: center;
@@ -1291,41 +1326,48 @@ a {
     width: 100%;
     height: 4px;
     border-radius: 2px;
-    background: #4d4d4d;
+    background: rgba(255, 255, 255, 0.14);
     outline: none;
     cursor: pointer;
     position: relative;
+    transition: height 0.15s ease;
+}
+
+.vt-range:hover {
+    height: 6px;
 }
 
 .vt-range::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    background: var(--sp-text-bright);
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     opacity: 0;
     transition: opacity 0.15s, transform 0.1s;
 }
 
 .vt-range:hover::-webkit-slider-thumb {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 .vt-range::-moz-range-thumb {
-    width: 12px;
-    height: 12px;
+    width: 13px;
+    height: 13px;
     border-radius: 50%;
-    background: var(--sp-text-bright);
+    background: #FFFFFF;
     border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
     opacity: 0;
     transition: opacity 0.15s, transform 0.1s;
 }
 
 .vt-range:hover::-moz-range-thumb {
     opacity: 1;
-    transform: scale(1.1);
+    transform: scale(1.15);
 }
 
 /* Player Right: Extra Controls & Volume */
@@ -1333,30 +1375,33 @@ a {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 14px;
+    gap: 16px;
     width: 30%;
     min-width: 200px;
 }
 
 .av-mode-pill {
     display: flex;
-    background: var(--sp-elevated);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: var(--sp-radius-pill);
-    padding: 2px;
+    padding: 3px;
+    backdrop-filter: blur(12px);
 }
 
 .av-pill-btn {
-    padding: 3px 10px;
+    padding: 4px 12px;
     border-radius: var(--sp-radius-pill);
     font-size: 11px;
     font-weight: 700;
     color: var(--sp-text-subdued);
-    transition: background 0.15s, color 0.15s;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .av-pill-btn.active {
-    background: var(--sp-highlight);
-    color: var(--sp-text-bright);
+    background: var(--sp-green);
+    color: #FFFFFF;
+    box-shadow: 0 2px 10px var(--vt-accent-glow);
 }
 
 .volume-control-wrap {
@@ -1368,21 +1413,23 @@ a {
 
 .volume-btn {
     color: var(--sp-text-subdued);
-    transition: color 0.15s;
+    transition: color 0.15s, transform 0.1s;
 }
 
 .volume-btn:hover {
     color: var(--sp-text-bright);
+    transform: scale(1.1);
 }
 
 /* ==========================================================================
-   Video Theater View
+   Video Theater View (Apple Cinema Mode)
    ========================================================================== */
 
 .theater-layout {
     display: grid;
     grid-template-columns: 1fr 340px;
-    gap: 24px;
+    gap: 28px;
+    padding-bottom: 24px;
 }
 
 @media (max-width: 990px) {
@@ -1395,46 +1442,86 @@ a {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    position: relative;
 }
 
-.theater-video-player {
+.theater-cinema-screen {
+    position: relative;
+    width: 100%;
+    max-width: 980px;
+    margin: 0 auto;
+    border-radius: 20px;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.theater-ambient-glow {
+    position: absolute;
+    inset: -20px;
+    background-size: cover;
+    background-position: center;
+    filter: blur(55px) saturate(220%);
+    opacity: 0.55;
+    z-index: 0;
+    pointer-events: none;
+    border-radius: 36px;
+    transform: scale(1.06);
+    transition: background-image 0.8s ease, opacity 0.5s ease;
+}
+
+.theater-cinema-screen .theater-video-player {
+    position: relative;
+    z-index: 1;
+    border-radius: 18px;
+    overflow: hidden;
     width: 100%;
     max-height: 70vh;
-    border-radius: 8px;
-    background: black;
-    aspect-ratio: 16/9;
+    background: #000000;
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.12);
 }
 
 .theater-song-card {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 36px 24px;
+    padding: 48px 24px;
     text-align: center;
-    background: radial-gradient(circle at center, #242424 0%, #181818 100%);
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(18, 18, 28, 0.65);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
     aspect-ratio: 16/9;
     max-height: 70vh;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 30px 70px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
 }
 
 .theater-song-art {
-    width: 220px;
-    height: 220px;
+    width: 200px;
+    height: 200px;
     object-fit: cover;
-    border-radius: 12px;
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.6);
-    margin-bottom: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
+    margin-bottom: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    z-index: 2;
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theater-song-art:hover {
+    transform: scale(1.04);
 }
 
 .theater-mode-bar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
 }
 
 .theater-queue {
@@ -1442,9 +1529,81 @@ a {
     flex-direction: column;
     gap: 12px;
     background: var(--sp-surface);
-    border-radius: 8px;
+    backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
     padding: 16px;
     height: fit-content;
+}
+
+/* ==========================================================================
+   Apple VisionOS Floating Picture-in-Picture Mini-Player
+   ========================================================================== */
+.ventune-yt-dock {
+    position: fixed;
+    z-index: 950;
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ventune-yt-dock.in-pip.is-video {
+    bottom: 108px;
+    right: 24px;
+    width: 280px;
+    height: 158px;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #000000;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.18);
+    backdrop-filter: blur(30px);
+}
+
+.ventune-yt-dock.in-pip.is-audio {
+    bottom: 108px;
+    right: 24px;
+    width: 160px;
+    height: 90px;
+    opacity: 0.01;
+    pointer-events: none;
+}
+
+.ventune-yt-dock.in-theater {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.ventune-yt-dock iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+.pip-expand-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    z-index: 10;
+}
+
+.pip-expand-btn:hover {
+    background: var(--sp-green);
+    transform: scale(1.05);
+    border-color: transparent;
 }
 
 /* ==========================================================================

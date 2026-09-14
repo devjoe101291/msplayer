@@ -85,12 +85,21 @@ class MediaItemController extends Controller
     public function stream(Request $request, MediaItem $mediaItem): Response
     {
         if ($mediaItem->external_stream_url) {
-            abort_unless(str_starts_with($mediaItem->external_stream_url, 'http'), 404);
-
-            return redirect()->away($mediaItem->external_stream_url);
+            if (str_starts_with($mediaItem->external_stream_url, 'http')) {
+                return redirect()->away($mediaItem->external_stream_url);
+            }
         }
 
-        abort_unless(Storage::disk('public')->exists($mediaItem->media_path), 404);
+        if (! Storage::disk('public')->exists($mediaItem->media_path)) {
+            if ($mediaItem->youtube_id) {
+                return response()->json([
+                    'message' => 'This item plays via YouTube stream.',
+                    'youtube_id' => $mediaItem->youtube_id,
+                    'is_youtube' => true,
+                ], 200);
+            }
+            abort(404, 'Media stream not found.');
+        }
 
         $path = Storage::disk('public')->path($mediaItem->media_path);
         $size = filesize($path);

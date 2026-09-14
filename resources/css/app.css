@@ -941,31 +941,35 @@ a {
     width: 100%;
     display: flex;
     flex-direction: column;
-    margin-top: 16px;
+    gap: 2px;
+    margin-top: 12px;
 }
 
 .track-table-header {
     display: grid;
-    grid-template-columns: 40px 1fr 1fr 80px;
-    padding: 8px 14px;
+    grid-template-columns: 44px minmax(220px, 4fr) minmax(140px, 2.5fr) minmax(80px, 1.2fr) 120px;
+    align-items: center;
+    padding: 8px 16px;
     font-size: 11px;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
     color: var(--am-text-tertiary);
     border-bottom: 1px solid var(--am-border);
+    user-select: none;
 }
 
 .track-table-row {
     display: grid;
-    grid-template-columns: 40px 1fr 1fr 80px;
+    grid-template-columns: 44px minmax(220px, 4fr) minmax(140px, 2.5fr) minmax(80px, 1.2fr) 120px;
     align-items: center;
-    padding: 8px 14px;
+    padding: 8px 16px;
     border-radius: 8px;
     font-size: 13.5px;
     color: var(--am-text-primary);
     cursor: pointer;
-    transition: background-color 0.15s;
+    transition: background-color 0.15s ease;
+    position: relative;
 }
 
 .track-table-row:hover {
@@ -973,168 +977,469 @@ a {
 }
 
 .track-table-row.active {
+    background-color: var(--am-sidebar-active);
+    color: var(--am-accent);
+}
+
+.track-col-index {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 32px;
+}
+
+.track-index-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--am-text-tertiary);
+    width: 24px;
+}
+
+.track-row-play-btn {
+    display: none;
+    color: var(--am-accent);
+    width: 24px;
+    height: 24px;
+    align-items: center;
+    justify-content: center;
+}
+
+.track-table-row:hover .track-index-num {
+    display: none;
+}
+
+.track-table-row:hover .track-row-play-btn {
+    display: flex;
+}
+
+.track-table-row.active .track-index-num {
     color: var(--am-accent);
 }
 
 .track-col-title {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 14px;
     min-width: 0;
+    padding-right: 12px;
 }
 
-.track-row-thumb {
-    width: 38px;
-    height: 38px;
+.track-table-thumb {
+    width: 40px;
+    height: 40px;
     border-radius: 6px;
     object-fit: cover;
     flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* ==========================================================================
-   Apple Cinema Video Theater View
-   ========================================================================== */
+.track-meta-wrap {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 2px;
+}
 
-.theater-layout {
+.track-title-text {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--am-text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.track-table-row.active .track-title-text {
+    color: var(--am-accent);
+}
+
+.track-artist-text {
+    font-size: 12px;
+    color: var(--am-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.track-col-album {
+    font-size: 13px;
+    color: var(--am-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 12px;
+}
+
+.track-col-plays {
+    font-size: 12px;
+    color: var(--am-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.track-col-duration {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    font-size: 12px;
+    color: var(--am-text-tertiary);
+    font-variant-numeric: tabular-nums;
+}
+
+.track-row-actions {
+    display: none;
+    align-items: center;
+    gap: 6px;
+}
+
+.track-table-row:hover .track-row-actions {
+    display: flex;
+}
+
+.track-row-btn {
+    color: var(--am-text-secondary);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
     display: grid;
-    grid-template-columns: 1fr 320px;
-    gap: 28px;
-    padding-bottom: 30px;
+    place-items: center;
+    transition: color 0.15s, background-color 0.15s;
 }
 
-@media (max-width: 990px) {
-    .theater-layout {
-        grid-template-columns: 1fr;
+.track-row-btn:hover {
+    color: var(--am-text-primary);
+    background-color: var(--am-sidebar-hover);
+}
+
+.track-row-btn.liked {
+    color: var(--am-accent);
+}
+
+@media (max-width: 850px) {
+    .track-table-header,
+    .track-table-row {
+        grid-template-columns: 44px minmax(180px, 1fr) 90px;
+    }
+    .track-col-album,
+    .track-col-plays,
+    .track-table-header div:nth-child(3),
+    .track-table-header div:nth-child(4) {
+        display: none;
     }
 }
 
-.theater-cinema-screen {
-    position: relative;
-    width: 100%;
-    max-width: 980px;
-    margin: 0 auto;
-    border-radius: 16px;
-    overflow: visible;
+/* ==========================================================================
+   Apple Music Hero Headers (Playlists, Liked Songs, Online Discovery)
+   ========================================================================== */
+
+.vt-hero {
     display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.theater-ambient-glow {
-    position: absolute;
-    inset: -20px;
-    background-size: cover;
-    background-position: center;
-    filter: blur(55px) saturate(220%);
-    opacity: 0.55;
-    z-index: 0;
-    pointer-events: none;
-    border-radius: 30px;
-    transform: scale(1.06);
-    transition: background-image 0.8s ease, opacity 0.5s ease;
-}
-
-.theater-cinema-screen .theater-video-player {
+    align-items: flex-end;
+    gap: 28px;
+    padding: 32px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(250, 45, 85, 0.12) 0%, rgba(124, 58, 237, 0.08) 100%);
+    border: 1px solid var(--am-border);
+    margin-bottom: 24px;
     position: relative;
-    z-index: 1;
+    box-shadow: var(--am-shadow);
+}
+
+.vt-hero.liked-gradient {
+    background: linear-gradient(135deg, rgba(250, 45, 85, 0.22) 0%, rgba(147, 51, 234, 0.16) 100%);
+}
+
+.vt-hero.online-gradient {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.18) 0%, rgba(147, 51, 234, 0.14) 100%);
+}
+
+.vt-hero-cover {
+    width: 180px;
+    height: 180px;
     border-radius: 14px;
     overflow: hidden;
-    width: 100%;
-    max-height: 70vh;
-    background: #000000;
-    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.75);
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: var(--am-sidebar);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    border: 1px solid var(--am-border);
 }
 
-.theater-song-card {
-    position: relative;
+.vt-hero-cover.liked-gradient {
+    background: linear-gradient(135deg, #FA2D55 0%, #7C3AED 100%);
+}
+
+.vt-hero-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.vt-hero-details {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 48px 24px;
-    text-align: center;
-    background: var(--am-sidebar);
-    border-radius: 20px;
-    border: 1px solid var(--am-border);
-    aspect-ratio: 16/9;
-    max-height: 70vh;
-    box-shadow: var(--am-shadow);
+    gap: 8px;
+    min-width: 0;
+}
+
+.vt-hero-type {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--am-accent);
+}
+
+.vt-hero-title {
+    font-size: 38px;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--am-text-primary);
+    margin: 0;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.theater-song-art {
-    width: 200px;
-    height: 200px;
-    object-fit: cover;
-    border-radius: 16px;
-    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
-    margin-bottom: 20px;
-    z-index: 2;
-}
-
-.theater-mode-bar {
+.vt-hero-meta {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 12px;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--am-text-secondary);
+    margin-top: 4px;
 }
 
-/* Picture-in-Picture Mini-Player */
-.ventune-yt-dock {
-    position: fixed;
-    z-index: 950;
-    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+.hero-action-bar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
 }
 
-.ventune-yt-dock.in-pip.is-video {
-    bottom: 96px;
-    right: 24px;
-    width: 280px;
-    height: 158px;
-    border-radius: 14px;
-    overflow: hidden;
-    background: #000000;
-    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--am-border);
+.play-circle-lg {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--am-accent);
+    color: #FFFFFF;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 18px var(--am-accent-glow);
+    transition: transform 0.15s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.15s;
 }
 
-.ventune-yt-dock.in-pip.is-audio {
-    bottom: 96px;
-    right: 24px;
-    width: 160px;
-    height: 90px;
-    opacity: 0.01;
-    pointer-events: none;
+.play-circle-lg:hover:not(:disabled) {
+    transform: scale(1.08);
+    background: var(--am-accent-hover);
 }
 
-.ventune-yt-dock.in-theater {
+.play-circle-lg:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+    .vt-hero {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 24px;
+    }
+    .vt-hero-details {
+        align-items: center;
+    }
+}
+
+/* ==========================================================================
+   Apple Music Shelves & Grid (Artists, Albums, Search, Online)
+   ========================================================================== */
+
+.shelf-title {
+    font-size: 24px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--am-text-primary);
+    margin: 0 0 16px 0;
+}
+
+.shelf-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 22px;
+    margin-bottom: 36px;
+}
+
+.vt-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+}
+
+.vt-card-cover-wrap {
     position: relative;
     width: 100%;
-    height: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background-color: var(--am-sidebar);
+    box-shadow: var(--am-shadow-card);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s;
 }
 
-.ventune-yt-dock iframe {
+.vt-card:hover .vt-card-cover-wrap {
+    transform: scale(1.03);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.25);
+}
+
+.vt-card-cover {
     width: 100%;
     height: 100%;
-    border: none;
+    object-fit: cover;
     display: block;
 }
 
-.pip-expand-btn {
+.vt-card-cover.artist-round,
+.artist-round {
+    border-radius: 50% !important;
+}
+
+.vt-card:hover .artist-round {
+    border-radius: 50% !important;
+}
+
+.vt-card-play {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(0, 0, 0, 0.75);
-    border-radius: 999px;
-    padding: 5px 12px;
-    font-size: 11px;
+    bottom: 10px;
+    right: 10px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--am-accent);
+    color: #FFFFFF;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.2s, transform 0.2s, background 0.15s;
+}
+
+.vt-card:hover .vt-card-play {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.vt-card-play:hover {
+    background-color: var(--am-accent-hover);
+    transform: scale(1.08);
+}
+
+.vt-card-title {
+    font-size: 13.5px;
     font-weight: 700;
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    color: var(--am-text-primary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.vt-card-desc {
+    font-size: 12.5px;
+    color: var(--am-text-secondary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Browse Categories Grid
+   ========================================================================== */
+
+.browse-categories-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 18px;
+    margin-bottom: 36px;
+}
+
+.category-tile {
+    position: relative;
+    height: 120px;
+    border-radius: 12px;
+    padding: 16px;
+    overflow: hidden;
     cursor: pointer;
-    z-index: 10;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.category-tile:hover {
+    transform: scale(1.03);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+}
+
+.category-tile-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: #FFFFFF;
+    margin: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.category-tile-icon {
+    position: absolute;
+    bottom: -10px;
+    right: -10px;
+    width: 72px;
+    height: 72px;
+    color: rgba(255, 255, 255, 0.3);
+    transform: rotate(25deg);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Apple Music Inputs & Controls
+   ========================================================================== */
+
+.vt-input {
+    width: 100%;
+    background-color: var(--am-sidebar);
+    border: 1px solid var(--am-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    color: var(--am-text-primary);
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.vt-input:focus {
+    border-color: var(--am-accent);
+    box-shadow: 0 0 0 2px var(--am-accent-glow);
+}
+
+.vt-input::placeholder {
+    color: var(--am-text-tertiary);
+}
+
+/* Pure Background Audio Stream Dock (No Video Popup) */
+.ventune-yt-dock-bg {
+    position: fixed;
+    width: 1px;
+    height: 1px;
+    opacity: 0.001;
+    pointer-events: none;
+    bottom: 0;
+    right: 0;
+    z-index: -1;
 }
 
 /* Modals & Queue Drawer */

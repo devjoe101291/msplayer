@@ -74,7 +74,7 @@ const CATEGORIES = [
     { id: 'indie', title: 'Indie', color: '#608108', icon: Disc },
     { id: 'chill', title: 'Chill', color: '#477d95', icon: Music2 },
     { id: 'focus', title: 'Focus & Study', color: '#503750', icon: Mic2 },
-    { id: 'video', title: 'Music Videos', color: '#1e3264', icon: Film },
+    { id: 'electronic', title: 'Electronic & Dance', color: '#1e3264', icon: Disc },
     { id: 'podcasts', title: 'Podcasts', color: '#006450', icon: Radio },
 ];
 
@@ -1103,20 +1103,7 @@ function App() {
     }
 
     async function openVideo(item) {
-        setSelectedVideo(item);
-        setActiveView('video');
-        handleTrackPlay({ ...item, type: 'video' });
-
-        try {
-            const response = await fetch(`/api/videos/${item.id}/theater`);
-            if (response.ok) {
-                const payload = await response.json();
-                setSelectedVideo(payload.data);
-                setRelatedVideos(payload.related);
-            }
-        } catch (e) {
-            // Ignore
-        }
+        handleTrackPlay(item);
     }
 
     const filteredItems = useMemo(() => {
@@ -1177,26 +1164,12 @@ function App() {
                 src={!isPlayingViaYt ? (current?.audio_stream_url || current?.stream_url || '') : ''}
             />
 
-            {/* YouTube Player Container for Continuous Background & Direct Playback */}
+            {/* YouTube Background Stream Dock: Pure background audio playback */}
             <div
                 id="ventune-yt-player-container"
-                className={`ventune-yt-dock ${isPlayingViaYt ? 'active' : ''} ${current?.type === 'video' ? 'is-video' : 'is-audio'} ${activeView === 'video' ? 'in-theater' : 'in-pip'}`}
+                className="ventune-yt-dock-bg"
             >
                 <div id="ventune-yt-player" />
-                {isPlayingViaYt && current?.type === 'video' && activeView !== 'video' && (
-                    <button
-                        className="pip-expand-btn"
-                        onClick={() => {
-                            setSelectedVideo(current);
-                            setActiveView('video');
-                        }}
-                        title="Expand to Theater Mode"
-                        type="button"
-                    >
-                        <Film size={13} />
-                        <span>Theater Mode</span>
-                    </button>
-                )}
             </div>
 
             {/* Apple Music Categorized Sidebar */}
@@ -1264,19 +1237,6 @@ function App() {
                     >
                         <Radio size={18} />
                         <span>Radio & Online</span>
-                    </button>
-                    <button
-                        className={`am-nav-item ${activeView === 'video' ? 'active' : ''}`}
-                        onClick={() => {
-                            if (current?.type === 'video') {
-                                setSelectedVideo(current);
-                            }
-                            setActiveView('video');
-                        }}
-                        type="button"
-                    >
-                        <Tv size={18} />
-                        <span>Music Videos</span>
                     </button>
                 </div>
 
@@ -1604,21 +1564,6 @@ function App() {
                         />
                     )}
 
-                    {activeView === 'video' && (
-                        <VideoTheaterView
-                            current={selectedVideo || current}
-                            isPlaying={isPlaying}
-                            mediaRef={mediaRef}
-                            onPlay={(item) => {
-                                playItem(item);
-                                setSelectedVideo(item);
-                            }}
-                            onSwitchAudioVideo={switchAudioVideo}
-                            onTogglePlay={togglePlay}
-                            related={relatedVideos}
-                        />
-                    )}
-
                     {activeView === 'upload' && (
                         <UploadStudioView
                             isAdmin={isAdmin}
@@ -1756,35 +1701,8 @@ function App() {
                     )}
                 </div>
 
-                {/* Right Section: A/V Switch, Theater, Queue, Volume */}
+                {/* Right Section: Queue & Volume */}
                 <div className="am-player-right">
-                    <div className="am-av-pill" role="group" aria-label="Audio/Video switch">
-                        <button
-                            className={`am-av-btn ${current?.type !== 'video' ? 'active' : ''}`}
-                            onClick={() => switchAudioVideo('audio')}
-                            type="button"
-                        >
-                            Audio
-                        </button>
-                        <button
-                            className={`am-av-btn ${current?.type === 'video' ? 'active' : ''}`}
-                            onClick={() => switchAudioVideo('video')}
-                            type="button"
-                        >
-                            Video
-                        </button>
-                    </div>
-
-                    <button
-                        className="am-ctrl-btn"
-                        onClick={() => {
-                            if (current) openVideo(current);
-                        }}
-                        title="Cinema Theater Mode"
-                        type="button"
-                    >
-                        <Film size={18} />
-                    </button>
 
                     <button
                         className={`am-ctrl-btn ${isQueueDrawerOpen ? 'active' : ''}`}
@@ -2021,8 +1939,8 @@ function HomeView({
     recentHistory,
 }) {
     const featuredItems = useMemo(() => items.slice(0, 10), [items]);
-    const audioItems = useMemo(() => items.filter((i) => i.type === 'audio').slice(0, 10), [items]);
-    const videoItems = useMemo(() => items.filter((i) => i.type === 'video').slice(0, 10), [items]);
+    const popularSongs = useMemo(() => (items.length > 10 ? items.slice(10, 20) : items.slice(0, 10)), [items]);
+    const newReleases = useMemo(() => [...items].reverse().slice(0, 10), [items]);
 
     const heroItem = items[0] || {
         title: 'Spatial Audio & Pure Acoustic Fidelity',
@@ -2038,7 +1956,7 @@ function HomeView({
                     <span className="am-hero-badge">FEATURED STREAM</span>
                     <h1 className="am-hero-title">{heroItem.title}</h1>
                     <p className="am-hero-sub">
-                        {heroItem.artist ? `${heroItem.artist} • ` : ''}Mastered for high-definition streaming. Experience Apple-inspired acoustic precision and spatial visuals.
+                        {heroItem.artist ? `${heroItem.artist} • ` : ''}Mastered for high-definition streaming. Experience Apple-inspired acoustic precision and spatial depth.
                     </p>
                     <button
                         className="am-hero-play-btn"
@@ -2080,7 +1998,7 @@ function HomeView({
             )}
 
             {/* Apple Music Popular Songs */}
-            {audioItems.length > 0 && (
+            {popularSongs.length > 0 && (
                 <section style={{ marginBottom: 36 }}>
                     <div className="am-section-title">
                         <h2>Popular Songs</h2>
@@ -2089,7 +2007,7 @@ function HomeView({
                         </button>
                     </div>
                     <div className="am-grid">
-                        {audioItems.map((item) => (
+                        {popularSongs.map((item) => (
                             <VentuneCard
                                 item={item}
                                 key={item.id}
@@ -2100,22 +2018,21 @@ function HomeView({
                 </section>
             )}
 
-            {/* Apple Music Videos */}
-            {videoItems.length > 0 && (
+            {/* Apple Music New Releases & Albums */}
+            {newReleases.length > 0 && (
                 <section style={{ marginBottom: 36 }}>
                     <div className="am-section-title">
-                        <h2>Music Videos & Visuals</h2>
-                        <button onClick={() => onSwitchView('library')} type="button">
+                        <h2>New Releases & Albums</h2>
+                        <button onClick={() => onSwitchView('albums')} type="button">
                             See All
                         </button>
                     </div>
                     <div className="am-grid">
-                        {videoItems.map((item) => (
+                        {newReleases.map((item) => (
                             <VentuneCard
-                                isVideo
                                 item={item}
-                                key={item.id}
-                                onPlay={() => onOpenVideo(item)}
+                                key={`release-${item.id}`}
+                                onPlay={() => onPlay(item)}
                             />
                         ))}
                     </div>
@@ -2128,7 +2045,7 @@ function HomeView({
 /* ==========================================================================
    Apple Music Album Card (Pure square artwork with subtle hover elevation)
    ========================================================================== */
-function VentuneCard({ item, onPlay, isVideo = false }) {
+function VentuneCard({ item, onPlay }) {
     const coverSrc = item.cover_url || item.thumbnail_url || item.external_cover_url;
 
     return (
@@ -2139,12 +2056,6 @@ function VentuneCard({ item, onPlay, isVideo = false }) {
                 ) : (
                     <div className="am-card-cover placeholder">
                         <Music2 size={36} color="var(--am-text-tertiary)" />
-                    </div>
-                )}
-                {isVideo && (
-                    <div className="am-video-badge">
-                        <Film size={12} />
-                        <span>VIDEO</span>
                     </div>
                 )}
                 <button
@@ -2799,7 +2710,7 @@ function YoutubeStudioView({ isAdmin, loading, notice, onImport, onPlay, onSearc
                 <input
                     className="vt-input"
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search songs or artist videos (e.g. Queen, Billie Eilish)"
+                    placeholder="Search songs or artists (e.g. Queen, Billie Eilish)"
                     value={searchTerm}
                 />
                 <button className="pill-action-btn green-accent" disabled={loading} type="submit">
@@ -2849,181 +2760,6 @@ function YoutubeStudioView({ isAdmin, loading, notice, onImport, onPlay, onSearc
                     </article>
                 ))}
             </div>
-        </div>
-    );
-}
-
-/* ==========================================================================
-   Video Theater View (Cinematic Dark Mode Player)
-   ========================================================================== */
-function VideoTheaterView({ current, isPlaying, mediaRef, onPlay, onSwitchAudioVideo, onTogglePlay, related }) {
-    if (!current) {
-        return (
-            <div className="flex flex-col items-center justify-center p-16 text-[#A8A3C8]">
-                <Film size={48} style={{ marginBottom: 12 }} />
-                <h3 style={{ fontSize: 20, color: '#fff' }}>No video selected</h3>
-                <p>Select a video from the library to play it here in Theater mode.</p>
-            </div>
-        );
-    }
-
-    const isVideoMode = current.type === 'video';
-    const videoSrc = current.video_stream_url || current.stream_url;
-    const audioSrc = current.audio_stream_url || current.stream_url;
-
-    return (
-        <div className="theater-layout">
-            <div className="theater-main">
-                {/* Song / Video Toggle Pill */}
-                <div className="theater-mode-bar">
-                    <div className="av-mode-pill" role="group" aria-label="Song or Video Mode">
-                        <button
-                            className={`av-pill-btn ${!isVideoMode ? 'active' : ''}`}
-                            onClick={() => onSwitchAudioVideo?.('audio')}
-                            type="button"
-                        >
-                            Song
-                        </button>
-                        <button
-                            className={`av-pill-btn ${isVideoMode ? 'active' : ''}`}
-                            onClick={() => onSwitchAudioVideo?.('video')}
-                            type="button"
-                        >
-                            Video
-                        </button>
-                    </div>
-
-                    <span className={`badge-tag ${isVideoMode ? 'online' : 'standard'}`}>
-                        {isVideoMode ? 'Video Mode' : 'Song Mode (Audio Only)'}
-                    </span>
-                </div>
-
-                {/* Media Surface: Video Player OR Album Art Song Card */}
-                {isVideoMode ? (
-                    (() => {
-                        const ytVideoId = current.youtube_id || extractYoutubeId(current.source_url || current.url || current.media_path);
-                        const hasDirectFile = videoSrc && !videoSrc.includes('duckdns.org/api/media') && !videoSrc.includes('googlevideo.com');
-
-                        if (hasDirectFile) {
-                            return (
-                                <div className="theater-cinema-screen">
-                                    <div
-                                        className="theater-ambient-glow"
-                                        style={{ backgroundImage: `url(${current.thumbnail_url || current.cover_url || ''})` }}
-                                    />
-                                    <video
-                                        autoPlay
-                                        className="theater-video-player"
-                                        controls
-                                        key={`${current.id}-theater-video-${videoSrc}`}
-                                        poster={current.thumbnail_url ?? current.cover_url ?? ''}
-                                        src={videoSrc}
-                                    />
-                                </div>
-                            );
-                        }
-
-                        if (ytVideoId) {
-                            return (
-                                <div className="theater-cinema-screen">
-                                    <div
-                                        className="theater-ambient-glow"
-                                        style={{ backgroundImage: `url(${current.thumbnail_url || current.cover_url || `https://i.ytimg.com/vi/${ytVideoId}/hqdefault.jpg`})` }}
-                                    />
-                                    <iframe
-                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                                        allowFullScreen
-                                        className="theater-video-player"
-                                        src={`https://www.youtube-nocookie.com/embed/${ytVideoId}?autoplay=1&enablejsapi=1&rel=0&playsinline=1`}
-                                        style={{ width: '100%', height: '520px', borderRadius: 16, border: 'none' }}
-                                        title={current.title}
-                                    />
-                                </div>
-                            );
-                        }
-
-                        return (
-                            <div className="flex flex-col items-center justify-center p-12 text-[#A8A3C8]">
-                                <p>No video stream available for this track.</p>
-                            </div>
-                        );
-                    })()
-                ) : (
-                    <div className="theater-song-card">
-                        <div
-                            className="theater-ambient-glow"
-                            style={{ backgroundImage: `url(${current.cover_url || current.thumbnail_url || current.external_cover_url || ''})` }}
-                        />
-                        <img
-                            alt={current.title}
-                            className="theater-song-art"
-                            src={current.cover_url || current.thumbnail_url || current.external_cover_url}
-                        />
-                        <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 4, zIndex: 2 }}>
-                            {current.title}
-                        </div>
-                        <div style={{ fontSize: 14, color: '#A8A3C8', marginBottom: 14, zIndex: 2 }}>
-                            {current.artist}
-                        </div>
-                        <div className="badge-tag standard" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, zIndex: 2 }}>
-                            <Headphones size={13} />
-                            <span>Spatial Audio Playback</span>
-                            <div className="vt-equalizer" style={{ marginLeft: 4 }}>
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                                <span></span>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                <div>
-                    <h2 style={{ fontSize: 24, fontWeight: 800, margin: '8px 0 4px 0', color: '#fff' }}>
-                        {current.title}
-                    </h2>
-                    <p style={{ color: '#A8A3C8', fontSize: 14 }}>
-                        {current.artist} {current.album ? `â€¢ ${current.album}` : ''}
-                    </p>
-                    {current.description && (
-                        <p style={{ color: '#727272', fontSize: 13, marginTop: 8 }}>{current.description}</p>
-                    )}
-                </div>
-            </div>
-
-            {/* Related Video Queue */}
-            <aside className="theater-queue">
-                <h3 style={{ fontSize: 16, fontWeight: 700, margin: '0 0 8px 0', color: '#fff' }}>
-                    More Videos
-                </h3>
-                {related && related.length > 0 ? (
-                    related.map((item) => (
-                        <div
-                            className="flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-[#2A2850] transition"
-                            key={item.id}
-                            onClick={() => onPlay(item)}
-                        >
-                            {item.cover_url || item.thumbnail_url ? (
-                                <img
-                                    alt=""
-                                    className="w-16 h-12 object-cover rounded"
-                                    src={item.cover_url || item.thumbnail_url}
-                                />
-                            ) : (
-                                <div className="w-16 h-12 bg-[#32305A] rounded flex items-center justify-center">
-                                    <Video size={16} color="#A8A3C8" />
-                                </div>
-                            )}
-                            <div className="min-w-0 flex-1">
-                                <div className="text-sm font-semibold text-white truncate">{item.title}</div>
-                                <div className="text-xs text-[#A8A3C8] truncate">{item.artist}</div>
-                            </div>
-                        </div>
-                    ))
-                ) : (
-                    <p style={{ color: '#727272', fontSize: 13 }}>No other videos available.</p>
-                )}
-            </aside>
         </div>
     );
 }

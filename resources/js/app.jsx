@@ -9,7 +9,7 @@ import {
     ArrowLeft,
     ArrowRight,
     Check,
-    Clock3,
+    Clock,
     Compass,
     Disc,
     Film,
@@ -25,6 +25,7 @@ import {
     LogOut,
     Maximize2,
     Mic2,
+    Moon,
     MoreHorizontal,
     Music2,
     Pause,
@@ -39,7 +40,9 @@ import {
     SkipBack,
     SkipForward,
     Sparkles,
+    Sun,
     Trash2,
+    Tv,
     UploadCloud,
     User,
     UserRound,
@@ -76,7 +79,17 @@ const CATEGORIES = [
 ];
 
 function App() {
+    const [theme, setTheme] = useState(() => localStorage.getItem('ventune_theme') || 'dark');
     const [activeView, setActiveView] = useState('home');
+
+    useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('ventune_theme', theme);
+    }, [theme]);
+
+    function toggleTheme() {
+        setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    }
     const [items, setItems] = useState([]);
     const [query, setQuery] = useState('');
     const [current, setCurrent] = useState(null);
@@ -1186,200 +1199,193 @@ function App() {
                 )}
             </div>
 
-            {/* Ventune Sidebar */}
-            <aside className="sidebar">
-                {/* Block 1: Navigation */}
-                <div className="sidebar-card sidebar-nav-card">
-                    <div className="brand">
-                        <div className="brand-mark">
-                            <Sparkles size={20} />
-                        </div>
-                        <div>
-                            <strong>Ventune</strong>
-                            <span>Spatial Music & Video</span>
-                        </div>
+            {/* Apple Music Categorized Sidebar */}
+            <aside className="am-sidebar">
+                {/* Brand Header */}
+                <div className="am-brand">
+                    <div className="am-brand-logo">
+                        <Sparkles size={18} />
                     </div>
+                    <span className="am-brand-name">Ventune</span>
+                </div>
 
+                {/* Apple Music Sidebar Search */}
+                <div className="am-sidebar-search">
+                    <Search size={14} />
+                    <input
+                        onChange={(e) => {
+                            setQuery(e.target.value);
+                            if (activeView !== 'search') setActiveView('search');
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                searchYoutube(query);
+                            }
+                        }}
+                        placeholder="Search"
+                        value={query}
+                    />
+                    {query && (
+                        <button
+                            className="am-search-clear"
+                            onClick={() => setQuery('')}
+                            type="button"
+                        >
+                            <X size={13} />
+                        </button>
+                    )}
+                </div>
+
+                {/* Apple Music Discovery Section */}
+                <div className="am-nav-section">
                     <button
-                        className={`nav-link ${activeView === 'home' ? 'active' : ''}`}
+                        className={`am-nav-item ${activeView === 'home' ? 'active' : ''}`}
                         onClick={() => setActiveView('home')}
                         type="button"
                     >
-                        <Home size={22} />
-                        <span>Home</span>
+                        <Home size={18} />
+                        <span>Listen Now</span>
                     </button>
-
                     <button
-                        className={`nav-link ${activeView === 'search' ? 'active' : ''}`}
+                        className={`am-nav-item ${activeView === 'search' ? 'active' : ''}`}
                         onClick={() => setActiveView('search')}
                         type="button"
                     >
-                        <Search size={22} />
-                        <span>Search</span>
+                        <Compass size={18} />
+                        <span>Browse</span>
+                    </button>
+                    <button
+                        className={`am-nav-item ${activeView === 'youtube' ? 'active' : ''}`}
+                        onClick={() => {
+                            setActiveView('youtube');
+                            if (!youtubeResults.length) searchYoutube('Coldplay');
+                        }}
+                        type="button"
+                    >
+                        <Radio size={18} />
+                        <span>Radio & Online</span>
+                    </button>
+                    <button
+                        className={`am-nav-item ${activeView === 'video' ? 'active' : ''}`}
+                        onClick={() => {
+                            if (current?.type === 'video') {
+                                setSelectedVideo(current);
+                            }
+                            setActiveView('video');
+                        }}
+                        type="button"
+                    >
+                        <Tv size={18} />
+                        <span>Music Videos</span>
                     </button>
                 </div>
 
-                {/* Block 2: Your Library */}
-                <div className="sidebar-card sidebar-library-card">
-                    <div className="library-header">
+                {/* Apple Music Library Section */}
+                <div className="am-nav-section">
+                    <div className="am-nav-header">Library</div>
+                    <button
+                        className={`am-nav-item ${activeView === 'library' ? 'active' : ''}`}
+                        onClick={() => setActiveView('library')}
+                        type="button"
+                    >
+                        <Music2 size={18} />
+                        <span>Songs</span>
+                    </button>
+                    <button
+                        className={`am-nav-item ${activeView === 'liked' ? 'active' : ''}`}
+                        onClick={() => setActiveView('liked')}
+                        type="button"
+                    >
+                        <Heart size={18} />
+                        <span>Liked Songs ({likedIds.length})</span>
+                    </button>
+                    <button
+                        className={`am-nav-item ${activeView === 'artists' ? 'active' : ''}`}
+                        onClick={() => setActiveView('artists')}
+                        type="button"
+                    >
+                        <UserRound size={18} />
+                        <span>Artists</span>
+                    </button>
+                    <button
+                        className={`am-nav-item ${activeView === 'albums' ? 'active' : ''}`}
+                        onClick={() => setActiveView('albums')}
+                        type="button"
+                    >
+                        <Album size={18} />
+                        <span>Albums</span>
+                    </button>
+                    <button
+                        className={`am-nav-item ${activeView === 'history' ? 'active' : ''}`}
+                        onClick={() => setActiveView('history')}
+                        type="button"
+                    >
+                        <Clock size={18} />
+                        <span>Recently Added</span>
+                    </button>
+                </div>
+
+                {/* Apple Music Playlists Section */}
+                <div className="am-nav-section">
+                    <div className="am-nav-header am-nav-header-row">
+                        <span>Playlists</span>
                         <button
-                            className="library-title-btn"
-                            onClick={() => setActiveView('library')}
+                            className="am-add-playlist-btn"
+                            onClick={() => {
+                                if (!authToken) {
+                                    setIsAuthModalOpen(true);
+                                    setAuthNotice('Log in to create playlists.');
+                                } else {
+                                    setIsCreatePlaylistOpen(true);
+                                }
+                            }}
+                            title="New Playlist"
                             type="button"
                         >
-                            <Library size={22} />
-                            <span>Your Library</span>
+                            <Plus size={16} />
                         </button>
-                        <div className="library-header-actions">
+                    </div>
+
+                    <div className="am-playlists-list">
+                        {playlists.map((pl) => (
                             <button
-                                className="icon-btn-circle"
-                                title="Create Playlist"
+                                className={`am-nav-item ${
+                                    activeView === 'playlist-detail' && selectedPlaylistId === pl.id
+                                        ? 'active'
+                                        : ''
+                                }`}
+                                key={pl.id}
                                 onClick={() => {
-                                    if (!authToken) {
-                                        setIsAuthModalOpen(true);
-                                        setAuthNotice('Log in to create playlists.');
-                                    } else {
-                                        setIsCreatePlaylistOpen(true);
-                                    }
+                                    setSelectedPlaylistId(pl.id);
+                                    setActiveView('playlist-detail');
                                 }}
                                 type="button"
                             >
-                                <Plus size={20} />
+                                <ListMusic size={16} />
+                                <span>{pl.name}</span>
                             </button>
-                        </div>
-                    </div>
-
-                    {/* Filter Pills */}
-                    <div className="filter-chips">
-                        <button
-                            className={`chip-btn ${libraryFilter === 'all' ? 'active' : ''}`}
-                            onClick={() => setLibraryFilter('all')}
-                            type="button"
-                        >
-                            All
-                        </button>
-                        <button
-                            className={`chip-btn ${libraryFilter === 'playlists' ? 'active' : ''}`}
-                            onClick={() => setLibraryFilter('playlists')}
-                            type="button"
-                        >
-                            Playlists
-                        </button>
-                        <button
-                            className={`chip-btn ${libraryFilter === 'artists' ? 'active' : ''}`}
-                            onClick={() => setLibraryFilter('artists')}
-                            type="button"
-                        >
-                            Artists
-                        </button>
-                        <button
-                            className={`chip-btn ${libraryFilter === 'albums' ? 'active' : ''}`}
-                            onClick={() => setLibraryFilter('albums')}
-                            type="button"
-                        >
-                            Albums
-                        </button>
-                    </div>
-
-                    {/* Playlists & Liked Songs List */}
-                    <div className="sidebar-list">
-                        {/* Pinned: Liked Songs */}
-                        {(libraryFilter === 'all' || libraryFilter === 'playlists') && (
-                            <button
-                                className={`sidebar-item ${activeView === 'liked' ? 'active' : ''}`}
-                                onClick={() => setActiveView('liked')}
-                                type="button"
-                            >
-                                <div className="sidebar-item-thumb liked-gradient">
-                                    <Heart fill="white" size={20} />
-                                </div>
-                                <div className="sidebar-item-info">
-                                    <div className="sidebar-item-title">Liked Songs</div>
-                                    <div className="sidebar-item-sub">
-                                        Playlist • {likedIds.length} songs
-                                    </div>
-                                </div>
-                            </button>
-                        )}
-
-                        {/* User Playlists */}
-                        {(libraryFilter === 'all' || libraryFilter === 'playlists') &&
-                            playlists.map((pl) => (
-                                <button
-                                    className={`sidebar-item ${
-                                        activeView === 'playlist-detail' && selectedPlaylistId === pl.id
-                                            ? 'active'
-                                            : ''
-                                    }`}
-                                    key={pl.id}
-                                    onClick={() => {
-                                        setSelectedPlaylistId(pl.id);
-                                        setActiveView('playlist-detail');
-                                    }}
-                                    type="button"
-                                >
-                                    <div className="sidebar-item-thumb">
-                                        <ListMusic size={20} color="#A8A3C8" />
-                                    </div>
-                                    <div className="sidebar-item-info">
-                                        <div className="sidebar-item-title">{pl.name}</div>
-                                        <div className="sidebar-item-sub">
-                                            Playlist • {pl.items?.length ?? 0} songs
-                                        </div>
-                                    </div>
-                                </button>
-                            ))}
-
-                        {/* Artists */}
-                        {(libraryFilter === 'all' || libraryFilter === 'artists') &&
-                            artists.slice(0, 8).map((art) => (
-                                <button
-                                    className="sidebar-item"
-                                    key={art.artist}
-                                    onClick={() => {
-                                        setSelectedArtist(art.artist);
-                                        setActiveView('artists');
-                                    }}
-                                    type="button"
-                                >
-                                    <div className="sidebar-item-thumb" style={{ borderRadius: '50%' }}>
-                                        <UserRound size={20} color="#A8A3C8" />
-                                    </div>
-                                    <div className="sidebar-item-info">
-                                        <div className="sidebar-item-title">{art.artist}</div>
-                                        <div className="sidebar-item-sub">Artist</div>
-                                    </div>
-                                </button>
-                            ))}
-
-                        {/* Shortcuts */}
-                        <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid #282828' }}>
-                            <button
-                                className={`nav-link ${activeView === 'youtube' ? 'active' : ''}`}
-                                onClick={() => setActiveView('youtube')}
-                                type="button"
-                            >
-                                <Compass size={18} />
-                                <span>Online Music</span>
-                            </button>
-                            {isAdmin && (
-                                <button
-                                    className={`nav-link ${activeView === 'upload' ? 'active' : ''}`}
-                                    onClick={() => setActiveView('upload')}
-                                    type="button"
-                                >
-                                    <UploadCloud size={18} />
-                                    <span>Upload Studio</span>
-                                </button>
-                            )}
-                        </div>
+                        ))}
                     </div>
                 </div>
+
+                {/* Admin Studio Shortcut */}
+                {isAdmin && (
+                    <div style={{ marginTop: 'auto', paddingTop: '12px', borderTop: '1px solid var(--am-border)' }}>
+                        <button
+                            className={`am-nav-item ${activeView === 'upload' ? 'active' : ''}`}
+                            onClick={() => setActiveView('upload')}
+                            type="button"
+                        >
+                            <UploadCloud size={18} />
+                            <span>Upload Studio</span>
+                        </button>
+                    </div>
+                )}
             </aside>
 
             {/* Main Content Area */}
             <main className="main-view">
-                {/* Sticky Top Bar */}
+                {/* Apple Music Header / Top Navigation */}
                 <header className="top-bar">
                     <div className="top-bar-left">
                         <button
@@ -1388,7 +1394,7 @@ function App() {
                             title="Go back"
                             type="button"
                         >
-                            <ArrowLeft size={18} />
+                            <ArrowLeft size={16} />
                         </button>
                         <button
                             className="nav-history-btn"
@@ -1396,77 +1402,56 @@ function App() {
                             title="Go forward"
                             type="button"
                         >
-                            <ArrowRight size={18} />
+                            <ArrowRight size={16} />
                         </button>
-
-                        {/* Top Global Search Input */}
-                        <div className="top-search-box">
-                            <Search size={18} />
-                            <input
-                                className="top-search-input"
-                                onChange={(e) => {
-                                    setQuery(e.target.value);
-                                    if (activeView !== 'search') setActiveView('search');
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                        searchYoutube(query);
-                                    }
-                                }}
-                                placeholder="What do you want to play?"
-                                value={query}
-                            />
-                            {query && (
-                                <button
-                                    className="top-search-clear"
-                                    onClick={() => setQuery('')}
-                                    type="button"
-                                >
-                                    <X size={16} />
-                                </button>
-                            )}
-                        </div>
                     </div>
 
                     <div className="top-bar-right">
+                        {/* Apple Music Light/Dark Theme Switcher */}
                         <button
-                            className="pill-action-btn green-accent"
+                            className="am-theme-toggle"
+                            onClick={toggleTheme}
+                            title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+                            type="button"
+                        >
+                            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+                        </button>
+
+                        <button
+                            className="am-nav-item"
+                            style={{ width: 'auto', padding: '6px 12px', background: 'var(--am-sidebar)', border: '1px solid var(--am-border)' }}
                             onClick={() => {
                                 setActiveView('youtube');
                                 if (!youtubeResults.length) searchYoutube('Coldplay');
                             }}
                             type="button"
                         >
-                            <Compass size={16} />
+                            <Compass size={15} color="var(--am-accent)" />
                             <span>Online Music</span>
                         </button>
 
                         {user ? (
                             <div
-                                className="user-profile-pill"
+                                className="am-profile-circle"
                                 onClick={() => {
                                     if (window.confirm('Log out from Ventune?')) {
                                         handleLogout();
                                     }
                                 }}
-                                title="Click to log out"
+                                title={`${user.name} (Click to log out)`}
                             >
-                                <div className="user-avatar">{user.name?.[0]?.toUpperCase() ?? 'U'}</div>
-                                <span className="user-name-text">{user.name}</span>
-                                {isAdmin && <span className="admin-badge">Admin</span>}
-                                <LogOut size={14} style={{ color: '#A8A3C8', marginLeft: '4px' }} />
+                                {user.name?.[0]?.toUpperCase() ?? 'U'}
                             </div>
                         ) : (
                             <button
-                                className="pill-action-btn"
+                                className="am-login-btn"
                                 onClick={() => {
                                     setAuthMode('login');
                                     setIsAuthModalOpen(true);
                                 }}
                                 type="button"
                             >
-                                <LogIn size={16} />
-                                <span>Log In</span>
+                                Sign In
                             </button>
                         )}
                     </div>
@@ -1648,128 +1633,141 @@ function App() {
                 </div>
             </main>
 
-            {/* Ventune Bottom Now Playing Bar */}
-            <footer className="vt-player">
-                {/* Left Section: Cover, Title, Artist, Heart */}
-                <div className="player-left">
+            {/* Apple Music Iconic LCD Player Bar */}
+            <footer className="am-player-bar">
+                {/* Left Section: Playback controls */}
+                <div className="am-player-left">
+                    <button
+                        className={`am-ctrl-btn ${isShuffle ? 'active' : ''}`}
+                        disabled={!current}
+                        onClick={() => setIsShuffle((s) => !s)}
+                        title={isShuffle ? 'Disable shuffle' : 'Enable shuffle'}
+                        type="button"
+                    >
+                        <Shuffle size={17} />
+                    </button>
+
+                    <button
+                        className="am-ctrl-btn"
+                        disabled={!current}
+                        onClick={() => jump(-1)}
+                        title="Previous"
+                        type="button"
+                    >
+                        <SkipBack size={20} />
+                    </button>
+
+                    <button
+                        className="am-play-main"
+                        disabled={!current}
+                        onClick={togglePlay}
+                        title={isPlaying ? 'Pause' : 'Play'}
+                        type="button"
+                    >
+                        {isPlaying ? <Pause fill="currentColor" size={18} /> : <Play fill="currentColor" size={18} />}
+                    </button>
+
+                    <button
+                        className="am-ctrl-btn"
+                        disabled={!current}
+                        onClick={() => jump(1)}
+                        title="Next"
+                        type="button"
+                    >
+                        <SkipForward size={20} />
+                    </button>
+
+                    <button
+                        className={`am-ctrl-btn ${repeatMode !== 'off' ? 'active' : ''}`}
+                        disabled={!current}
+                        onClick={cycleRepeat}
+                        title={`Repeat: ${repeatMode}`}
+                        type="button"
+                    >
+                        {repeatMode === 'one' ? <Repeat1 size={17} /> : <Repeat size={17} />}
+                    </button>
+                </div>
+
+                {/* Center Section: Apple Music LCD Screen */}
+                <div className="am-lcd-display">
                     {current?.cover_url || current?.external_cover_url || current?.thumbnail_url ? (
                         <img
                             alt=""
-                            className="player-thumb"
+                            className="am-lcd-thumb"
                             src={current.cover_url || current.external_cover_url || current.thumbnail_url}
                         />
                     ) : (
-                        <div className="player-thumb flex items-center justify-center bg-[#2A2850]">
-                            <Music2 size={24} color="#A8A3C8" />
+                        <div className="am-lcd-thumb placeholder">
+                            <Music2 size={20} />
                         </div>
                     )}
-                    <div className="player-track-info">
-                        <div className="player-title" title={current?.title ?? 'No song selected'}>
-                            {current?.title ?? 'No song selected'}
+                    <div className="am-lcd-content">
+                        <div className="am-lcd-info">
+                            <span className="am-lcd-title" title={current?.title ?? 'Not Playing'}>
+                                {current?.title ?? 'Not Playing'}
+                            </span>
+                            {current && (
+                                <>
+                                    <span className="am-lcd-separator">•</span>
+                                    <span className="am-lcd-artist" title={current?.artist ?? 'Ventune'}>
+                                        {current?.artist ?? 'Ventune'}
+                                    </span>
+                                </>
+                            )}
+                            {isPlaying && (
+                                <div className="am-soundwave" title="Playing">
+                                    <span />
+                                    <span />
+                                    <span />
+                                    <span />
+                                </div>
+                            )}
                         </div>
-                        <div className="player-artist" title={current?.artist ?? 'Ventune'}>
-                            {current?.artist ?? 'Select a track to play'}
+                        <div className="am-lcd-scrubber">
+                            <span className="am-scrub-time">{formatTime(progress.currentTime)}</span>
+                            <input
+                                aria-label="Seek track"
+                                className="am-range"
+                                disabled={!current || !progress.duration}
+                                max={progress.duration || 0}
+                                min={0}
+                                onChange={(e) => handleSeek(Number(e.target.value))}
+                                step={0.25}
+                                type="range"
+                                value={Math.min(progress.currentTime, progress.duration || 0)}
+                            />
+                            <span className="am-scrub-time">
+                                {progress.duration ? `-${formatTime(Math.max(0, progress.duration - progress.currentTime))}` : '0:00'}
+                            </span>
                         </div>
                     </div>
                     {current && (
                         <button
-                            className={`player-heart-btn ${likedIds.includes(current.id) ? 'active' : ''}`}
+                            className={`am-lcd-heart ${likedIds.includes(current.id) ? 'active' : ''}`}
                             onClick={() => toggleLike(current)}
-                            title="Save to your Liked Songs"
+                            title="Love this track"
                             type="button"
                         >
                             <Heart
                                 fill={likedIds.includes(current.id) ? 'currentColor' : 'none'}
-                                size={18}
+                                size={16}
                             />
                         </button>
                     )}
                 </div>
 
-                {/* Center Section: Controls & Live Scrubber */}
-                <div className="player-center">
-                    <div className="player-controls-row">
+                {/* Right Section: A/V Switch, Theater, Queue, Volume */}
+                <div className="am-player-right">
+                    <div className="am-av-pill" role="group" aria-label="Audio/Video switch">
                         <button
-                            className={`player-ctrl-btn ${isShuffle ? 'active' : ''}`}
-                            disabled={!current}
-                            onClick={() => setIsShuffle((s) => !s)}
-                            title={isShuffle ? 'Disable shuffle' : 'Enable shuffle'}
-                            type="button"
-                        >
-                            <Shuffle size={18} />
-                        </button>
-
-                        <button
-                            className="player-ctrl-btn"
-                            disabled={!current}
-                            onClick={() => jump(-1)}
-                            title="Previous"
-                            type="button"
-                        >
-                            <SkipBack size={20} />
-                        </button>
-
-                        <button
-                            className="play-pause-main"
-                            disabled={!current}
-                            onClick={togglePlay}
-                            title={isPlaying ? 'Pause' : 'Play'}
-                            type="button"
-                        >
-                            {isPlaying ? <Pause fill="currentColor" size={20} /> : <Play fill="currentColor" size={20} />}
-                        </button>
-
-                        <button
-                            className="player-ctrl-btn"
-                            disabled={!current}
-                            onClick={() => jump(1)}
-                            title="Next"
-                            type="button"
-                        >
-                            <SkipForward size={20} />
-                        </button>
-
-                        <button
-                            className={`player-ctrl-btn ${repeatMode !== 'off' ? 'active' : ''}`}
-                            disabled={!current}
-                            onClick={cycleRepeat}
-                            title={`Repeat: ${repeatMode}`}
-                            type="button"
-                        >
-                            {repeatMode === 'one' ? <Repeat1 size={18} /> : <Repeat size={18} />}
-                        </button>
-                    </div>
-
-                    <div className="scrubber-row">
-                        <span className="scrubber-time">{formatTime(progress.currentTime)}</span>
-                        <input
-                            aria-label="Seek track"
-                            className="vt-range"
-                            disabled={!current || !progress.duration}
-                            max={progress.duration || 0}
-                            min={0}
-                            onChange={(e) => handleSeek(Number(e.target.value))}
-                            step={0.25}
-                            type="range"
-                            value={Math.min(progress.currentTime, progress.duration || 0)}
-                        />
-                        <span className="scrubber-time">{formatTime(progress.duration)}</span>
-                    </div>
-                </div>
-
-                {/* Right Section: A/V Switch, Theater, Volume Slider */}
-                <div className="player-right">
-                    {/* Audio / Video Switch Pill */}
-                    <div className="av-mode-pill" role="group" aria-label="Audio/Video switch">
-                        <button
-                            className={`av-pill-btn ${current?.type !== 'video' ? 'active' : ''}`}
+                            className={`am-av-btn ${current?.type !== 'video' ? 'active' : ''}`}
                             onClick={() => switchAudioVideo('audio')}
                             type="button"
                         >
                             Audio
                         </button>
                         <button
-                            className={`av-pill-btn ${current?.type === 'video' ? 'active' : ''}`}
+                            className={`am-av-btn ${current?.type === 'video' ? 'active' : ''}`}
                             onClick={() => switchAudioVideo('video')}
                             type="button"
                         >
@@ -1778,40 +1776,39 @@ function App() {
                     </div>
 
                     <button
-                        className="player-ctrl-btn"
+                        className="am-ctrl-btn"
                         onClick={() => {
                             if (current) openVideo(current);
                         }}
-                        title="Theater Mode"
+                        title="Cinema Theater Mode"
                         type="button"
                     >
                         <Film size={18} />
                     </button>
 
                     <button
-                        className={`player-ctrl-btn ${isQueueDrawerOpen ? 'active' : ''}`}
+                        className={`am-ctrl-btn ${isQueueDrawerOpen ? 'active' : ''}`}
                         onClick={() => setIsQueueDrawerOpen((prev) => !prev)}
-                        style={{ color: isQueueDrawerOpen ? 'var(--sp-green)' : undefined }}
+                        style={{ color: isQueueDrawerOpen ? 'var(--am-accent)' : undefined }}
                         title="Play Queue & Autoplay"
                         type="button"
                     >
                         <ListMusic size={18} />
                     </button>
 
-                    {/* Volume Slider */}
-                    <div className="volume-control-wrap">
-                        <button className="volume-btn" onClick={toggleMute} title={isMuted ? 'Unmute' : 'Mute'} type="button">
+                    <div className="am-volume-wrap">
+                        <button className="am-volume-icon" onClick={toggleMute} title={isMuted ? 'Unmute' : 'Mute'} type="button">
                             {isMuted || volume === 0 ? (
-                                <VolumeX size={18} />
+                                <VolumeX size={17} />
                             ) : volume < 0.5 ? (
-                                <Volume1 size={18} />
+                                <Volume1 size={17} />
                             ) : (
-                                <Volume2 size={18} />
+                                <Volume2 size={17} />
                             )}
                         </button>
                         <input
                             aria-label="Volume"
-                            className="vt-range"
+                            className="am-range am-vol-range"
                             max={1}
                             min={0}
                             onChange={handleVolume}
@@ -2009,7 +2006,7 @@ function App() {
 }
 
 /* ==========================================================================
-   Home View: Greeting, 6-Pack Grid, Shelves with Hover Play Buttons
+   Home View: Apple Music "Listen Now" with Editorial Hero & Square Cards
    ========================================================================== */
 function HomeView({
     greeting,
@@ -2023,108 +2020,54 @@ function HomeView({
     playlists,
     recentHistory,
 }) {
-    const featuredItems = useMemo(() => items.slice(0, 6), [items]);
-    const audioItems = useMemo(() => items.filter((i) => i.type === 'audio').slice(0, 6), [items]);
-    const videoItems = useMemo(() => items.filter((i) => i.type === 'video').slice(0, 6), [items]);
+    const featuredItems = useMemo(() => items.slice(0, 10), [items]);
+    const audioItems = useMemo(() => items.filter((i) => i.type === 'audio').slice(0, 10), [items]);
+    const videoItems = useMemo(() => items.filter((i) => i.type === 'video').slice(0, 10), [items]);
+
+    const heroItem = items[0] || {
+        title: 'Spatial Audio & Pure Acoustic Fidelity',
+        artist: 'Ventune Curators',
+        cover_url: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80',
+    };
 
     return (
-        <div className="flex flex-col gap-8">
-            <div>
-                <h1 className="greeting-text">{greeting}</h1>
-                {/* 6-Pack Quick Access Grid */}
-                <div className="quick-access-grid">
-                    {/* Liked Songs 6-Pack Card */}
-                    <div
-                        className="quick-card"
-                        onClick={() => onSwitchView('liked')}
+        <div className="flex flex-col">
+            {/* Apple Music Editorial Hero Banner */}
+            <div className="am-hero-banner">
+                <div className="am-hero-content">
+                    <span className="am-hero-badge">FEATURED STREAM</span>
+                    <h1 className="am-hero-title">{heroItem.title}</h1>
+                    <p className="am-hero-sub">
+                        {heroItem.artist ? `${heroItem.artist} • ` : ''}Mastered for high-definition streaming. Experience Apple-inspired acoustic precision and spatial visuals.
+                    </p>
+                    <button
+                        className="am-hero-play-btn"
+                        onClick={() => onPlay(heroItem)}
+                        type="button"
                     >
-                        <div className="quick-card-thumb liked-gradient">
-                            <Heart fill="white" size={24} />
-                        </div>
-                        <span className="quick-card-title">Liked Songs</span>
-                        <button
-                            className="quick-card-play"
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                onSwitchView('liked');
-                            }}
-                            type="button"
-                        >
-                            <Play fill="black" size={22} />
-                        </button>
-                    </div>
-
-                    {/* Top Playlists */}
-                    {playlists.slice(0, 5).map((pl) => (
-                        <div
-                            className="quick-card"
-                            key={pl.id}
-                            onClick={() => onSelectPlaylist(pl.id)}
-                        >
-                            <div className="quick-card-thumb flex items-center justify-center bg-[#2A2850]">
-                                <ListMusic size={24} color="#A8A3C8" />
-                            </div>
-                            <span className="quick-card-title">{pl.name}</span>
-                            <button
-                                className="quick-card-play"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (pl.items?.[0]?.media_item) {
-                                        onPlay(pl.items[0].media_item);
-                                    }
-                                }}
-                                type="button"
-                            >
-                                <Play fill="black" size={22} />
-                            </button>
-                        </div>
-                    ))}
-
-                    {/* Featured items if playlists are few */}
-                    {playlists.length < 5 &&
-                        featuredItems.slice(0, 5 - playlists.length).map((item) => (
-                            <div
-                                className="quick-card"
-                                key={item.id}
-                                onClick={() => onPlay(item)}
-                            >
-                                {item.cover_url || item.thumbnail_url || item.external_cover_url ? (
-                                    <img
-                                        alt=""
-                                        className="quick-card-thumb"
-                                        src={item.cover_url || item.thumbnail_url || item.external_cover_url}
-                                    />
-                                ) : (
-                                    <div className="quick-card-thumb flex items-center justify-center bg-[#2A2850]">
-                                        <Music2 size={24} color="#A8A3C8" />
-                                    </div>
-                                )}
-                                <span className="quick-card-title">{item.title}</span>
-                                <button
-                                    className="quick-card-play"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        onPlay(item);
-                                    }}
-                                    type="button"
-                                >
-                                    <Play fill="black" size={22} />
-                                </button>
-                            </div>
-                        ))}
+                        <Play fill="white" size={17} />
+                        <span>Listen Now</span>
+                    </button>
                 </div>
+                {(heroItem.cover_url || heroItem.thumbnail_url || heroItem.external_cover_url) && (
+                    <img
+                        alt={heroItem.title}
+                        className="am-hero-art"
+                        src={heroItem.cover_url || heroItem.thumbnail_url || heroItem.external_cover_url}
+                    />
+                )}
             </div>
 
-            {/* Shelf: Made For You / Featured Tracks */}
+            {/* Apple Music Featured / Top Hits */}
             {items.length > 0 && (
-                <section className="shelf-section">
-                    <div className="shelf-header">
-                        <h2 className="shelf-title">Featured Hits</h2>
-                        <button className="shelf-show-all" onClick={() => onSwitchView('library')} type="button">
-                            Show all
+                <section style={{ marginBottom: 36 }}>
+                    <div className="am-section-title">
+                        <h2>Top Hits</h2>
+                        <button onClick={() => onSwitchView('library')} type="button">
+                            See All
                         </button>
                     </div>
-                    <div className="shelf-grid">
+                    <div className="am-grid">
                         {featuredItems.map((item) => (
                             <VentuneCard
                                 item={item}
@@ -2136,16 +2079,16 @@ function HomeView({
                 </section>
             )}
 
-            {/* Shelf: Audio Tracks */}
+            {/* Apple Music Popular Songs */}
             {audioItems.length > 0 && (
-                <section className="shelf-section">
-                    <div className="shelf-header">
-                        <h2 className="shelf-title">Popular Songs</h2>
-                        <button className="shelf-show-all" onClick={() => onSwitchView('library')} type="button">
-                            Show all
+                <section style={{ marginBottom: 36 }}>
+                    <div className="am-section-title">
+                        <h2>Popular Songs</h2>
+                        <button onClick={() => onSwitchView('library')} type="button">
+                            See All
                         </button>
                     </div>
-                    <div className="shelf-grid">
+                    <div className="am-grid">
                         {audioItems.map((item) => (
                             <VentuneCard
                                 item={item}
@@ -2157,16 +2100,16 @@ function HomeView({
                 </section>
             )}
 
-            {/* Shelf: Music Videos */}
+            {/* Apple Music Videos */}
             {videoItems.length > 0 && (
-                <section className="shelf-section">
-                    <div className="shelf-header">
-                        <h2 className="shelf-title">Music Videos & Visuals</h2>
-                        <button className="shelf-show-all" onClick={() => onSwitchView('library')} type="button">
-                            Show all
+                <section style={{ marginBottom: 36 }}>
+                    <div className="am-section-title">
+                        <h2>Music Videos & Visuals</h2>
+                        <button onClick={() => onSwitchView('library')} type="button">
+                            See All
                         </button>
                     </div>
-                    <div className="shelf-grid">
+                    <div className="am-grid">
                         {videoItems.map((item) => (
                             <VentuneCard
                                 isVideo
@@ -2183,36 +2126,42 @@ function HomeView({
 }
 
 /* ==========================================================================
-   Ventune Card Component
+   Apple Music Album Card (Pure square artwork with subtle hover elevation)
    ========================================================================== */
 function VentuneCard({ item, onPlay, isVideo = false }) {
     const coverSrc = item.cover_url || item.thumbnail_url || item.external_cover_url;
 
     return (
-        <article className="vt-card" onClick={onPlay}>
-            <div className="vt-card-cover-wrap">
+        <article className="am-card" onClick={onPlay}>
+            <div className="am-card-cover-wrap">
                 {coverSrc ? (
-                    <img alt="" className="vt-card-cover" src={coverSrc} />
+                    <img alt="" className="am-card-cover" src={coverSrc} />
                 ) : (
-                    <div className="vt-card-cover flex items-center justify-center bg-[#2A2850]">
-                        <Music2 size={36} color="#A8A3C8" />
+                    <div className="am-card-cover placeholder">
+                        <Music2 size={36} color="var(--am-text-tertiary)" />
+                    </div>
+                )}
+                {isVideo && (
+                    <div className="am-video-badge">
+                        <Film size={12} />
+                        <span>VIDEO</span>
                     </div>
                 )}
                 <button
-                    className="vt-card-play"
+                    className="am-card-play-overlay"
                     onClick={(e) => {
                         e.stopPropagation();
                         onPlay();
                     }}
+                    title={`Play ${item.title}`}
                     type="button"
                 >
-                    <Play fill="black" size={22} />
+                    <Play fill="currentColor" size={18} />
                 </button>
             </div>
-            <div>
-                <h3 className="vt-card-title">{item.title}</h3>
-                <p className="vt-card-desc">{item.artist || 'Various Artists'}</p>
-                {item.source === 'youtube' && <span className="badge-tag online">Online</span>}
+            <div className="am-card-meta">
+                <h3 className="am-card-title" title={item.title}>{item.title}</h3>
+                <p className="am-card-artist" title={item.artist}>{item.artist || 'Ventune'}</p>
             </div>
         </article>
     );
@@ -2443,7 +2392,7 @@ function TrackTable({
                 <div>Album</div>
                 <div>Plays</div>
                 <div style={{ textAlign: 'right' }}>
-                    <Clock3 size={15} style={{ display: 'inline' }} />
+                    <Clock size={15} style={{ display: 'inline' }} />
                 </div>
             </div>
 
